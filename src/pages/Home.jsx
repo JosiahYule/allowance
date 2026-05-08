@@ -3,40 +3,43 @@ function Home() {
   const daysLeft = 12
   const spentThisMonth = 1842
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount, decimals = 2) => {
     return amount.toLocaleString('en-CA', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
     })
   }
 
   return (
     <div className="p-6 max-w-md mx-auto">
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-10">
         <div>
-          <p className="text-gray-500 text-sm">Good morning,</p>
-          <p className="text-3xl font-bold text-black">Alex</p>
+          <p className="text-black text-sm">Good morning,</p>
+          <p className="text-4xl font-thin text-black">Alex</p>
         </div>
-        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-          <span className="text-gray-400 text-sm">A</span>
+        <div className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
+          <span className="text-gray-500 text-sm">A</span>
         </div>
       </div>
 
-      <div className="mb-8">
-        <p className="text-sm text-gray-500 mb-1">Safe to spend today</p>
-        <p className="text-7xl font-bold text-black tracking-tight">${formatCurrency(safeToSpend)}</p>
-        <p className="text-sm text-gray-500 mt-3">{daysLeft} days left in May</p>
+      <div className="mb-10">
+        <p className="text-base text-black mb-1">Safe to spend today</p>
+        <p className="text-8xl font-thin text-black tracking-tight leading-none">${formatCurrency(safeToSpend)}</p>
+        <p className="text-sm text-black mt-4 pb-4 border-b border-gray-200">{daysLeft} days left in May</p>
       </div>
 
-      <div className="mb-8">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Spent this month</p>
-        <p className="text-2xl font-semibold">${formatCurrency(spentThisMonth)}</p>
+      <div className="mb-10">
+        <p className="text-xs font-medium text-black uppercase tracking-wide mb-1">Spent this month</p>
+        <p className="text-3xl font-thin text-black">${formatCurrency(spentThisMonth, 0)}</p>
       </div>
 
-      <div>
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Weekly insight</p>
-        <p className="text-sm font-semibold text-black">Dining is +18% vs last month</p>
+      <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-4">
+        <div>
+          <p className="text-xs text-black mb-1">Weekly insight</p>
+          <p className="text-sm font-semibold text-black">Dining is +18% vs last month</p>
+        </div>
+        <span className="text-gray-300 text-xl">›</span>
       </div>
 
     </div>
