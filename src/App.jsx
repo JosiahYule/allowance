@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import Transactions from './pages/Transactions'
 import Plan from './pages/Plan'
 import Profile from './pages/Profile'
+import BottomNav from './components/BottomNav'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/plan" element={<Plan />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
+      <BottomNav />
     </BrowserRouter>
   )
 }
