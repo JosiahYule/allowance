@@ -8,12 +8,14 @@ import BottomNav from './components/BottomNav'
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/plan" element={<Plan />} />
-        <Route path="/profile" element={<Profile />} />
-      </Routes>
+      <div className="pb-16">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/plan" element={<Plan />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </div>
       <BottomNav />
     </BrowserRouter>
   )
