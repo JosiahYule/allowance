@@ -5,12 +5,29 @@ function AddExpense({ onClose }) {
   const [category, setCategory] = useState('')
   const [note, setNote] = useState('')
 
+function handleSave() {
+  if (!amount) {
+    alert('Please enter an amount')
+    return
+  }
+
+  const expense = {
+    amount: parseFloat(amount),
+    category,
+    note,
+    date: new Date().toISOString()
+  }
+
+  console.log('Saving expense:', expense)
+  onClose()
+}
+
   return (
     <div className="fixed inset-0 bg-white z-50 p-6">
       <div className="flex justify-between items-center mb-8">
         <button onClick={onClose} className="text-sm text-gray-500">Cancel</button>
         <p className="text-sm font-medium">Add expense</p>
-        <button className="text-sm font-medium text-black">Save</button>
+        <button onClick={handleSave} className="text-sm font-medium text-black">Save</button>
       </div>
 
       <div className="mb-6">
