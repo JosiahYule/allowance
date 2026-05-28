@@ -14,6 +14,7 @@ function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showAddExpense, setShowAddExpense] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -41,11 +42,12 @@ function App() {
           <Route path="/plan" element={<Plan />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/budgets" element={<Budgets />} />
+          <Route path="/" element={<Home refreshKey={refreshKey} />} />
         </Routes>
       </div>
 
       {showAddExpense && (
-        <AddExpense onClose={() => setShowAddExpense(false)} />
+        <AddExpense onClose={() => setShowAddExpense(false)} onSave={() => setRefreshKey(k => k + 1)}/>
       )}
 
       <button

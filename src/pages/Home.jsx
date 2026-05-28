@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-function Home() {
+function Home({ refreshKey }) {
   const [available, setAvailable] = useState(0)
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState('')
@@ -9,7 +9,6 @@ function Home() {
   useEffect(() => {
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser()
-setUserEmail(user?.email?.split('@')[0] || '')
 const rawName = user?.email?.split('@')[0] || ''
 const capitalized = rawName.charAt(0).toUpperCase() + rawName.slice(1)
 setUserEmail(capitalized)
@@ -31,7 +30,7 @@ setUserEmail(capitalized)
     }
 
     fetchData()
-  }, [])
+  }, [refreshKey])
 
   const daysLeft = new Date(
     new Date().getFullYear(),

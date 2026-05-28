@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-function AddExpense({ onClose }) {
+function AddExpense({ onClose, onSave }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [note, setNote] = useState('')
@@ -31,6 +31,7 @@ async function handleSave() {
     return
   }
 
+  onSave()
   onClose()
 }
 
