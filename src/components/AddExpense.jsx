@@ -5,6 +5,7 @@ function AddExpense({ onClose }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [note, setNote] = useState('')
+  const [description, setDescription] = useState('')
 
   async function handleSave() {
     if (!amount) {
@@ -15,7 +16,7 @@ function AddExpense({ onClose }) {
     const { error } = await supabase
       .from('transactions')
       .insert({
-        description: category || 'Expense',
+        description: description || category || 'Expense',
         amount: parseFloat(amount) * -1,
         category,
         note,
@@ -48,6 +49,17 @@ function AddExpense({ onClose }) {
           className="text-5xl font-thin w-full outline-none text-black"
         />
       </div>
+
+<div className="mb-6">
+  <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Description</p>
+  <input
+    type="text"
+    placeholder="e.g. Coffee Bar"
+    value={description}
+    onChange={e => setDescription(e.target.value)}
+    className="text-xl font-thin w-full outline-none text-black border-b border-gray-200 pb-2"
+  />
+</div>
 
       <div className="mb-6">
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Category</p>
