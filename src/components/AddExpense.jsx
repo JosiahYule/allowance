@@ -1,26 +1,34 @@
 import { useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 function AddExpense({ onClose }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [note, setNote] = useState('')
 
-function handleSave() {
-  if (!amount) {
-    alert('Please enter an amount')
-    return
-  }
+  async function handleSave() {
+    if (!amount) {
+      alert('Please enter an amount')
+      return
+    }
 
-  const expense = {
-    amount: parseFloat(amount),
-    category,
-    note,
-    date: new Date().toISOString()
-  }
+    const { error } = await supabase
+      .from('transactions')
+      .insert({
+        description: category || 'Expense',
+        amount: parseFloat(amount) * -1,
+        category,
+        note,
+        date: new Date().toISOString().split('T')[0]
+      })
 
-  console.log('Saving expense:', expense)
-  onClose()
-}
+    if (error) {
+      console.log('Error saving:', error.message)
+      return
+    }
+
+    onClose()
+  }
 
   return (
     <div className="fixed inset-0 bg-white z-50 p-6">
