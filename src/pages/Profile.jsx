@@ -1,6 +1,9 @@
 import { supabase } from '../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 
 function Profile() {
+    const navigate = useNavigate()
+    
   async function handleLogout() {
     await supabase.auth.signOut()
   }
@@ -14,10 +17,13 @@ function Profile() {
         <p className="text-sm text-black">Manage your account settings</p>
       </div>
 
-      <div className="mb-6 pb-6 border-b border-gray-100">
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Budgets</p>
-        <p className="text-sm text-black">Set and edit monthly budgets</p>
-      </div>
+<div 
+  onClick={() => navigate('/budgets')}
+  className="mb-6 pb-6 border-b border-gray-100 cursor-pointer"
+>
+  <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Budgets</p>
+  <p className="text-sm text-black">Set and edit monthly budgets</p>
+</div>
 
       <div className="mb-6 pb-6 border-b border-gray-100">
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Notifications</p>

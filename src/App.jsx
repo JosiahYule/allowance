@@ -8,6 +8,7 @@ import Auth from './pages/Auth'
 import BottomNav from './components/BottomNav'
 import AddExpense from './components/AddExpense'
 import { supabase } from './lib/supabase'
+import Budgets from './pages/Budgets'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -39,6 +40,7 @@ function App() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/plan" element={<Plan />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/budgets" element={<Budgets />} />
         </Routes>
       </div>
 
