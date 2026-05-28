@@ -1,10 +1,27 @@
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+
 function Transactions() {
-  const transactions = [
-    { id: 1, description: 'Coffee Bar', amount: -6.50, category: 'Dining', date: '2026-05-08' },
-    { id: 2, description: 'Grocery Market', amount: -42.10, category: 'Groceries', date: '2026-05-08' },
-    { id: 3, description: 'Salary Deposit', amount: 2800.00, category: 'Income', date: '2026-05-07' },
-    { id: 4, description: 'Metro Card', amount: -25.00, category: 'Transport', date: '2026-05-07' },
-  ]
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchTransactions() {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false })
+
+      if (error) {
+        console.log('Error fetching:', error.message)
+      } else {
+        setTransactions(data)
+      }
+      setLoading(false)
+    }
+
+    fetchTransactions()
+  }, [])
 
   const formatCurrency = (amount) => {
     const formatted = Math.abs(amount).toLocaleString('en-CA', {
@@ -23,8 +40,6 @@ function Transactions() {
     }, {})
   }
 
-  const grouped = groupByDate(transactions)
-
   const formatDateLabel = (dateStr) => {
     const today = new Date().toISOString().split('T')[0]
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
@@ -33,10 +48,16 @@ function Transactions() {
     return dateStr
   }
 
+  if (loading) {
+    return <div className="p-6 text-sm text-gray-400">Loading...</div>
+  }
+
+  const grouped = groupByDate(transactions)
+
   return (
     <div className="p-6 max-w-md mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <p className="text-3xl font-semibold text-black">Transactions</p>
+        <p className="text-2xl font-bold text-black">Transactions</p>
         <button className="text-sm text-gray-400">Filter</button>
       </div>
 
@@ -58,6 +79,10 @@ function Transactions() {
           ))}
         </div>
       ))}
+
+      {transactions.length === 0 && (
+        <p className="text-sm text-gray-400">No transactions yet.</p>
+      )}
     </div>
   )
 }
