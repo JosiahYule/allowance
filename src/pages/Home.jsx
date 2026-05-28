@@ -2,31 +2,29 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 function Home() {
-  const [spentThisMonth, setSpentThisMonth] = useState(0)
+  const [available, setAvailable] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchMonthlySpend() {
+    async function fetchData() {
+      const currentMonth = new Date().toISOString().slice(0, 7)
       const startOfMonth = new Date()
       startOfMonth.setDate(1)
       startOfMonth.setHours(0, 0, 0, 0)
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('amount')
-        .gte('created_at', startOfMonth.toISOString())
-        .lt('amount', 0)
+      const [budgetsRes, transactionsRes] = await Promise.all([
+        supabase.from('budgets').select('monthly_limit').eq('month', currentMonth),
+        supabase.from('transactions').select('amount').gte('created_at', startOfMonth.toISOString()).lt('amount', 0)
+      ])
 
-      if (error) {
-        console.log('Error:', error.message)
-      } else {
-        const total = data.reduce((sum, t) => sum + Math.abs(t.amount), 0)
-        setSpentThisMonth(total)
-      }
+      const totalBudget = (budgetsRes.data || []).reduce((sum, b) => sum + b.monthly_limit, 0)
+      const totalSpent = (transactionsRes.data || []).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+      setAvailable(totalBudget - totalSpent)
       setLoading(false)
     }
 
-    fetchMonthlySpend()
+    fetchData()
   }, [])
 
   const daysLeft = new Date(
@@ -56,11 +54,13 @@ function Home() {
       </div>
 
       <div className="mb-10">
-        <p className="text-base text-black mb-1">Spent this month</p>
+        <p className="text-base text-black mb-1">Available to spend</p>
         <p className="text-8xl font-thin text-black tracking-tight leading-none">
-          ${loading ? '...' : formatCurrency(spentThisMonth, 0)}
+          ${loading ? '...' : formatCurrency(available, 0)}
         </p>
-        <p className="text-sm text-black mt-4 pb-4 border-b border-gray-200">{daysLeft} days left in {new Date().toLocaleString('default', { month: 'long' })}</p>
+        <p className="text-sm text-black mt-4 pb-4 border-b border-gray-200">
+          {daysLeft} days left in {new Date().toLocaleString('default', { month: 'long' })}
+        </p>
       </div>
 
       <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-4">
