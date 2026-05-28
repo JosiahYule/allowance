@@ -4,9 +4,15 @@ import { supabase } from '../lib/supabase'
 function Home() {
   const [available, setAvailable] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [userEmail, setUserEmail] = useState('')
 
   useEffect(() => {
     async function fetchData() {
+      const { data: { user } } = await supabase.auth.getUser()
+setUserEmail(user?.email?.split('@')[0] || '')
+const rawName = user?.email?.split('@')[0] || ''
+const capitalized = rawName.charAt(0).toUpperCase() + rawName.slice(1)
+setUserEmail(capitalized)
       const currentMonth = new Date().toISOString().slice(0, 7)
       const startOfMonth = new Date()
       startOfMonth.setDate(1)
@@ -40,13 +46,20 @@ function Home() {
     })
   }
 
+  const getGreeting = () => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
   return (
     <div className="p-6 max-w-md mx-auto">
 
       <div className="flex justify-between items-center mb-10">
         <div>
-          <p className="text-black text-sm">Good morning,</p>
-          <p className="text-4xl font-thin text-black">Alex</p>
+          <p className="text-black text-sm">{getGreeting()},</p>
+          <p className="text-4xl font-thin text-black">{userEmail}</p>
         </div>
         <div className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center">
           <span className="text-gray-500 text-sm">A</span>
