@@ -1,9 +1,17 @@
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 
 function Profile() {
-    const navigate = useNavigate()
-    
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setEmail(user?.email || '')
+    })
+  }, [])
+
   async function handleLogout() {
     await supabase.auth.signOut()
   }
@@ -14,20 +22,18 @@ function Profile() {
 
       <div className="mb-6 pb-6 border-b border-gray-100">
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Account</p>
-        <p className="text-sm text-black">Manage your account settings</p>
+        <p className="text-sm text-black">{email}</p>
       </div>
 
-<div 
-  onClick={() => navigate('/budgets')}
-  className="mb-6 pb-6 border-b border-gray-100 cursor-pointer"
->
-  <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Budgets</p>
-  <p className="text-sm text-black">Set and edit monthly budgets</p>
-</div>
-
-      <div className="mb-6 pb-6 border-b border-gray-100">
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Notifications</p>
-        <p className="text-sm text-black">Manage alerts and reminders</p>
+      <div
+        onClick={() => navigate('/budgets')}
+        className="mb-6 pb-6 border-b border-gray-100 cursor-pointer flex justify-between items-center"
+      >
+        <div>
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Budgets</p>
+          <p className="text-sm text-black">Set and edit monthly limits</p>
+        </div>
+        <span className="text-gray-300 text-xl">›</span>
       </div>
 
       <button
