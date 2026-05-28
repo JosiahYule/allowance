@@ -7,29 +7,32 @@ function AddExpense({ onClose }) {
   const [note, setNote] = useState('')
   const [description, setDescription] = useState('')
 
-  async function handleSave() {
-    if (!amount) {
-      alert('Please enter an amount')
-      return
-    }
-
-    const { error } = await supabase
-      .from('transactions')
-      .insert({
-        description: description || category || 'Expense',
-        amount: parseFloat(amount) * -1,
-        category,
-        note,
-        date: new Date().toISOString().split('T')[0]
-      })
-
-    if (error) {
-      console.log('Error saving:', error.message)
-      return
-    }
-
-    onClose()
+async function handleSave() {
+  if (!amount) {
+    alert('Please enter an amount')
+    return
   }
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { error } = await supabase
+    .from('transactions')
+    .insert({
+      user_id: user.id,
+      description: description || category || 'Expense',
+      amount: parseFloat(amount) * -1,
+      category,
+      note,
+      date: new Date().toISOString().split('T')[0]
+    })
+
+  if (error) {
+    console.log('Error saving:', error.message)
+    return
+  }
+
+  onClose()
+}
 
   return (
     <div className="fixed inset-0 bg-white z-50 p-6">
