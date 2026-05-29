@@ -104,7 +104,7 @@ function Home({ refreshKey, monthlyIncome }) {
       <div className="mb-10">
         <p className="text-base text-black mb-1">{monthlyIncome != null ? 'Available to spend' : 'Budget remaining'}</p>
         <p className={`text-8xl font-thin tracking-tight leading-none ${!loading && available < 0 ? 'text-red-800' : 'text-black'}`}>
-          {loading ? <span className="text-4xl text-gray-300">—</span> : fmt(available)}
+          {loading ? <span className="text-4xl text-gray-300">...</span> : fmt(available)}
         </p>
         <p className="text-sm text-gray-500 mt-4 pb-4 border-b border-gray-200">
           {daysLeft !== null
@@ -120,8 +120,8 @@ function Home({ refreshKey, monthlyIncome }) {
           <p className="text-sm font-medium text-black capitalize">
             {data.topInsight.category}
             {data.topInsight.limit != null
-              ? ` — ${fmt(data.topInsight.spent)} of ${fmt(data.topInsight.limit)}`
-              : ` — ${fmt(data.topInsight.spent)}`}
+              ? ` · ${fmt(data.topInsight.spent)} of ${fmt(data.topInsight.limit)}`
+              : ` · ${fmt(data.topInsight.spent)}`}
           </p>
         </div>
       )}

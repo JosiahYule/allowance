@@ -104,7 +104,7 @@ function Budgets() {
               <p className="text-sm font-medium text-black capitalize">{category}</p>
               {!isEditing && (
                 <button onClick={() => startEditing(category)} className="text-xs text-gray-400">
-                  {existing ? `$${existing.monthly_limit.toLocaleString()} — Edit` : 'Set limit'}
+                  {existing ? `$${existing.monthly_limit.toLocaleString()} · Edit` : 'Set limit'}
                 </button>
               )}
             </div>

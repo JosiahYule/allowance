@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
-import { Search, X, Check, Trash2, Pencil } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import MonthNav from '../components/MonthNav'
 import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
 
@@ -273,36 +273,35 @@ function Transactions({ refreshKey, onRefresh }) {
 
                 {/* Expanded: action buttons */}
                 {expandedId === txn.id && !editState && !deleteConfirmId && (
-                  <div className="flex gap-6 py-3 px-1 border-b border-gray-100">
+                  <div className="flex border-b border-gray-100">
                     <button
                       onClick={() => startEdit(txn)}
-                      className="flex items-center gap-1.5 text-xs text-black font-medium"
+                      className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors"
                     >
-                      <Pencil size={12} /> Edit
+                      Edit
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(txn.id)}
-                      className="flex items-center gap-1.5 text-xs text-gray-400 font-medium"
+                      className="flex-1 py-3 text-xs font-medium text-black hover:bg-black hover:text-white transition-colors"
                     >
-                      <Trash2 size={12} /> Delete
+                      Delete
                     </button>
                   </div>
                 )}
 
                 {/* Delete confirm */}
                 {expandedId === txn.id && deleteConfirmId === txn.id && (
-                  <div className="flex items-center gap-4 py-3 px-1 border-b border-gray-100">
-                    <p className="text-xs text-gray-400 flex-1">Delete this transaction?</p>
+                  <div className="flex border-b border-gray-100">
                     <button
                       onClick={() => confirmDelete(txn.id)}
                       disabled={actionLoading}
-                      className="text-xs font-medium text-black disabled:opacity-50"
+                      className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors disabled:opacity-50"
                     >
-                      {actionLoading ? '…' : 'Delete'}
+                      {actionLoading ? '…' : 'Confirm delete'}
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(null)}
-                      className="text-xs text-gray-400"
+                      className="flex-1 py-3 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
                     >
                       Cancel
                     </button>
@@ -371,17 +370,17 @@ function Transactions({ refreshKey, onRefresh }) {
                         className="text-sm outline-none border-b border-gray-200 pb-1 bg-transparent"
                       />
                     </div>
-                    <div className="flex gap-3 pt-1">
+                    <div className="flex border-t border-gray-100 mt-1">
                       <button
                         onClick={saveEdit}
                         disabled={actionLoading}
-                        className="flex items-center gap-1.5 text-xs font-medium text-white bg-black px-3 py-1.5 rounded-full disabled:opacity-50"
+                        className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors disabled:opacity-50"
                       >
-                        <Check size={12} /> {actionLoading ? 'Saving…' : 'Save'}
+                        {actionLoading ? 'Saving…' : 'Save'}
                       </button>
                       <button
                         onClick={() => setEditState(null)}
-                        className="text-xs text-gray-400"
+                        className="flex-1 py-3 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
                       >
                         Cancel
                       </button>
