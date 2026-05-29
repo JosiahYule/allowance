@@ -273,16 +273,16 @@ function Transactions({ refreshKey, onRefresh }) {
 
                 {/* Expanded: action buttons */}
                 {expandedId === txn.id && !editState && !deleteConfirmId && (
-                  <div className="flex gap-3 py-2 px-1 border-b border-gray-100 bg-gray-50">
+                  <div className="flex gap-6 py-3 px-1 border-b border-gray-100">
                     <button
                       onClick={() => startEdit(txn)}
-                      className="flex items-center gap-1.5 text-xs text-black font-medium px-3 py-1.5 border border-gray-200 rounded-full"
+                      className="flex items-center gap-1.5 text-xs text-black font-medium"
                     >
                       <Pencil size={12} /> Edit
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(txn.id)}
-                      className="flex items-center gap-1.5 text-xs text-red-500 font-medium px-3 py-1.5 border border-red-100 rounded-full"
+                      className="flex items-center gap-1.5 text-xs text-gray-400 font-medium"
                     >
                       <Trash2 size={12} /> Delete
                     </button>
@@ -291,14 +291,14 @@ function Transactions({ refreshKey, onRefresh }) {
 
                 {/* Delete confirm */}
                 {expandedId === txn.id && deleteConfirmId === txn.id && (
-                  <div className="flex items-center gap-3 py-2 px-1 border-b border-gray-100 bg-gray-50">
-                    <p className="text-xs text-gray-500 flex-1">Delete this transaction?</p>
+                  <div className="flex items-center gap-4 py-3 px-1 border-b border-gray-100">
+                    <p className="text-xs text-gray-400 flex-1">Delete this transaction?</p>
                     <button
                       onClick={() => confirmDelete(txn.id)}
                       disabled={actionLoading}
-                      className="text-xs font-medium text-red-500 disabled:opacity-50"
+                      className="text-xs font-medium text-black disabled:opacity-50"
                     >
-                      {actionLoading ? '…' : 'Yes, delete'}
+                      {actionLoading ? '…' : 'Delete'}
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(null)}
