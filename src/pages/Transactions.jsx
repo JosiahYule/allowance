@@ -266,7 +266,7 @@ function Transactions({ refreshKey, onRefresh }) {
                       <p className="text-xs text-gray-400 capitalize">{txn.category}</p>
                     )}
                   </div>
-                  <p className={`text-sm font-medium flex-shrink-0 ${txn.amount < 0 ? 'text-black' : 'text-green-600'}`}>
+                  <p className={`text-sm font-medium flex-shrink-0 ${txn.amount < 0 ? 'text-black' : 'text-green-800'}`}>
                     {fmt(txn.amount)}
                   </p>
                 </button>

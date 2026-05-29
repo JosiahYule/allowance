@@ -26,8 +26,7 @@ function getStatus(spent, limit) {
 }
 
 function statusColors(status) {
-  if (status === 'over') return { bar: 'bg-red-500', text: 'text-red-500', label: 'font-medium' }
-  if (status === 'warning') return { bar: 'bg-amber-400', text: 'text-amber-500', label: '' }
+  if (status === 'over') return { bar: 'bg-black', text: 'text-red-800', label: 'font-medium' }
   return { bar: 'bg-black', text: 'text-gray-400', label: '' }
 }
 
