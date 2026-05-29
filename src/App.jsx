@@ -18,6 +18,10 @@ async function processRecurringTransactions(userId) {
     const today = new Date().toISOString().split('T')[0]
     const currentMonth = today.slice(0, 7)
     const startOfMonth = `${currentMonth}-01`
+    const [cy, cm] = currentMonth.split('-').map(Number)
+    const monthStartDate = new Date(cy, cm - 1, 1)
+    const monthEndDate = new Date(cy, cm, 0)
+    const todayDate = new Date(today + 'T00:00:00')
 
     const { data: templates, error } = await supabase
       .from('transactions')
@@ -32,32 +36,75 @@ async function processRecurringTransactions(userId) {
       // Template itself was created this month — it IS the instance, don't duplicate
       if (tmpl.date >= startOfMonth) continue
 
-      const { data: existing } = await supabase
-        .from('transactions')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('recurring_parent_id', tmpl.id)
-        .gte('date', startOfMonth)
+      const interval = tmpl.recurring_interval || 'monthly'
 
-      if (existing?.length) continue
+      if (interval === 'monthly') {
+        const { data: existing } = await supabase
+          .from('transactions')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('recurring_parent_id', tmpl.id)
+          .gte('date', startOfMonth)
 
-      const tmplDate = new Date(tmpl.date + 'T00:00:00')
-      const dayOfMonth = tmplDate.getDate()
-      const [cy, cm] = currentMonth.split('-').map(Number)
-      const maxDay = new Date(cy, cm, 0).getDate()
-      const dueDateStr = `${currentMonth}-${String(Math.min(dayOfMonth, maxDay)).padStart(2, '0')}`
+        if (existing?.length) continue
 
-      if (dueDateStr > today) continue
+        const tmplDate = new Date(tmpl.date + 'T00:00:00')
+        const dayOfMonth = tmplDate.getDate()
+        const maxDay = new Date(cy, cm, 0).getDate()
+        const dueDateStr = `${currentMonth}-${String(Math.min(dayOfMonth, maxDay)).padStart(2, '0')}`
 
-      await supabase.from('transactions').insert({
-        user_id: userId,
-        description: tmpl.description,
-        amount: tmpl.amount,
-        category: tmpl.category,
-        date: dueDateStr,
-        recurring: false,
-        recurring_parent_id: tmpl.id,
-      })
+        if (dueDateStr > today) continue
+
+        await supabase.from('transactions').insert({
+          user_id: userId,
+          description: tmpl.description,
+          amount: tmpl.amount,
+          category: tmpl.category,
+          date: dueDateStr,
+          recurring: false,
+          recurring_parent_id: tmpl.id,
+        })
+      } else {
+        // Weekly / biweekly: find all occurrences that fall in the current month up to today
+        const intervalDays = interval === 'weekly' ? 7 : 14
+        const tmplDate = new Date(tmpl.date + 'T00:00:00')
+
+        // Efficiently jump close to start of current month
+        const msPerDay = 1000 * 60 * 60 * 24
+        const daysToMonthStart = Math.max(0, Math.floor((monthStartDate - tmplDate) / msPerDay))
+        const stepsToMonthStart = Math.floor(daysToMonthStart / intervalDays)
+        const cursor = new Date(tmplDate)
+        cursor.setDate(cursor.getDate() + stepsToMonthStart * intervalDays)
+
+        const dueDates = []
+        while (cursor <= monthEndDate) {
+          if (cursor >= monthStartDate && cursor <= todayDate) {
+            dueDates.push(cursor.toISOString().split('T')[0])
+          }
+          cursor.setDate(cursor.getDate() + intervalDays)
+        }
+
+        for (const dueDateStr of dueDates) {
+          const { data: existing } = await supabase
+            .from('transactions')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('recurring_parent_id', tmpl.id)
+            .eq('date', dueDateStr)
+
+          if (!existing?.length) {
+            await supabase.from('transactions').insert({
+              user_id: userId,
+              description: tmpl.description,
+              amount: tmpl.amount,
+              category: tmpl.category,
+              date: dueDateStr,
+              recurring: false,
+              recurring_parent_id: tmpl.id,
+            })
+          }
+        }
+      }
     }
   } catch {
     // Silently skip if recurring columns don't exist yet (migration not run)
@@ -107,7 +154,6 @@ function App() {
         loadUserSettings(session.user.id)
       } else {
         setSetupComplete(null)
-        setMonthlyIncome(null)
       }
     })
 

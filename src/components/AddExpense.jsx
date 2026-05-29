@@ -56,7 +56,10 @@ function AddExpense({ onClose, onSave }) {
   function shiftDate(days) {
     const d = new Date(date + 'T00:00:00')
     d.setDate(d.getDate() + days)
-    setDate(d.toISOString().split('T')[0])
+    const newDate = d.toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0]
+    if (newDate > today) return
+    setDate(newDate)
   }
 
   const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-CA', {

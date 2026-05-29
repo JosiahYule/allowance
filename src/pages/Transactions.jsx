@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { Search, X } from 'lucide-react'
 import MonthNav from '../components/MonthNav'
-import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
+import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
 
 function getMonthRange(month) {
@@ -19,6 +19,7 @@ function Transactions({ refreshKey, onRefresh }) {
   const [error, setError] = useState('')
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
+  const [customIcons, setCustomIcons] = useState({})
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -32,7 +33,10 @@ function Transactions({ refreshKey, onRefresh }) {
   useEffect(() => { fetchTransactions() }, [refreshKey, month])
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) fetchAllCategories(user.id).then(setCategories)
+      if (user) {
+        fetchAllCategories(user.id).then(setCategories)
+        fetchCategoryIconMap(user.id).then(setCustomIcons)
+      }
     })
   }, [])
 
@@ -236,6 +240,7 @@ function Transactions({ refreshKey, onRefresh }) {
                       isIncome={txn.amount >= 0}
                       size={15}
                       className="text-gray-500"
+                      customIcons={customIcons}
                     />
                   </div>
                   <div className="flex-1 min-w-0">

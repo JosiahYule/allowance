@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { CategoryIcon } from '../lib/categoryIcons'
+import { fetchCategoryIconMap } from '../lib/categories'
 
 function getMonthRange(month) {
   const [y, m] = month.split('-').map(Number)
@@ -16,8 +17,10 @@ function Home({ refreshKey }) {
   const [displayName, setDisplayName] = useState('')
   const [monthlyIncome, setMonthlyIncome] = useState(null)
   const [totalSpent, setTotalSpent] = useState(0)
+  const [totalEarned, setTotalEarned] = useState(0)
   const [totalPlanned, setTotalPlanned] = useState(0)
   const [recent, setRecent] = useState([])
+  const [customIcons, setCustomIcons] = useState({})
 
   const currentMonth = new Date().toISOString().slice(0, 7)
 
@@ -29,20 +32,24 @@ function Home({ refreshKey }) {
 
     const { start, end } = getMonthRange(currentMonth)
 
-    const [budgetsRes, txRes, settingsRes] = await Promise.all([
+    const [budgetsRes, txRes, settingsRes, iconMap] = await Promise.all([
       supabase.from('budgets').select('monthly_limit').eq('month', currentMonth).eq('user_id', user.id),
       supabase.from('transactions').select('*').gte('date', start).lt('date', end).eq('user_id', user.id).order('date', { ascending: false }).order('created_at', { ascending: false }),
       supabase.from('user_settings').select('monthly_income').eq('user_id', user.id).maybeSingle(),
+      fetchCategoryIconMap(user.id),
     ])
 
     const income = settingsRes.data?.monthly_income ?? null
     setMonthlyIncome(income)
+    setCustomIcons(iconMap)
 
     const txns = txRes.data || []
     const spent = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+    const earned = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)
     const budgetTotal = (budgetsRes.data || []).reduce((s, b) => s + b.monthly_limit, 0)
 
     setTotalSpent(spent)
+    setTotalEarned(earned)
     setTotalPlanned(income ?? budgetTotal)
     setRecent(txns.slice(0, 3))
     setLoading(false)
@@ -132,6 +139,30 @@ function Home({ refreshKey }) {
             style={{ width: loading ? '0%' : `${pct * 100}%` }}
           />
         </div>
+
+        {/* Earned / Spent / Net mini-stats */}
+        {!loading && (totalEarned > 0 || totalSpent > 0) && (
+          <div className="flex justify-between mt-4 pt-4 border-t border-gray-50">
+            <div className="text-center">
+              <p className="text-xs text-gray-400 mb-0.5">Earned</p>
+              <p className="text-sm font-semibold text-green-800">
+                +${totalEarned.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-400 mb-0.5">Spent</p>
+              <p className="text-sm font-semibold text-black">
+                -${totalSpent.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-400 mb-0.5">Net</p>
+              <p className={`text-sm font-semibold ${totalEarned - totalSpent >= 0 ? 'text-black' : 'text-red-800'}`}>
+                {totalEarned - totalSpent >= 0 ? '+' : '-'}${Math.abs(totalEarned - totalSpent).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Recent transactions */}
@@ -166,6 +197,7 @@ function Home({ refreshKey }) {
                     isIncome={txn.amount >= 0}
                     size={15}
                     className="text-gray-500"
+                    customIcons={customIcons}
                   />
                 </div>
                 <div className="flex-1 min-w-0">

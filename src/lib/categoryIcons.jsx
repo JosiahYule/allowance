@@ -15,8 +15,17 @@ export function getCategoryIcon(category) {
 }
 
 /* eslint-disable react-hooks/static-components */
-export function CategoryIcon({ category, isIncome, size = 15, className = '' }) {
-  const Icon = isIncome ? DollarSign : getCategoryIcon(category)
+export function CategoryIcon({ category, isIncome, size = 15, className = '', customIcons = {} }) {
+  if (isIncome) return <DollarSign size={size} className={className} />
+  const emoji = customIcons[category?.toLowerCase()]
+  if (emoji) {
+    return (
+      <span style={{ fontSize: size, lineHeight: 1 }} role="img" aria-label={category}>
+        {emoji}
+      </span>
+    )
+  }
+  const Icon = getCategoryIcon(category)
   return <Icon size={size} className={className} />
 }
 /* eslint-enable react-hooks/static-components */
