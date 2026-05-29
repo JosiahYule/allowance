@@ -12,7 +12,13 @@ function BottomNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center h-16">
+    <nav
+      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-start pt-3"
+      style={{
+        height: 'calc(4rem + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
       {tabs.map(({ label, path, icon: Icon }) => {
         const active = pathname === path
         return (

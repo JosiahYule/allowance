@@ -148,7 +148,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="pb-16">
+      <div style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom, 0px))' }}>
         <Routes>
           <Route path="/" element={<Home refreshKey={refreshKey} />} />
           <Route path="/transactions" element={<Transactions refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />} />
@@ -174,7 +174,8 @@ function App() {
 
       <button
         onClick={() => setShowAddExpense(true)}
-        className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-black text-white text-sm font-medium px-8 py-4 rounded-full shadow-lg z-10"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        className="fixed left-1/2 -translate-x-1/2 bg-black text-white text-sm font-medium px-8 py-4 rounded-full shadow-lg z-10"
       >
         + Add
       </button>
