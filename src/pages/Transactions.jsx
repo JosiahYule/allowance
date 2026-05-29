@@ -29,6 +29,7 @@ function Transactions({ refreshKey, onRefresh }) {
   const [editState, setEditState] = useState(null) // { id, description, amount, category, date, isExpense }
   const [deleteConfirmId, setDeleteConfirmId] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => { fetchTransactions() }, [refreshKey, month])
   useEffect(() => {
@@ -111,14 +112,17 @@ function Transactions({ refreshKey, onRefresh }) {
       setExpandedId(null)
       setEditState(null)
       setDeleteConfirmId(null)
+      setActionError('')
     } else {
       setExpandedId(id)
       setEditState(null)
       setDeleteConfirmId(null)
+      setActionError('')
     }
   }
 
   function startEdit(txn) {
+    setActionError('')
     setEditState({
       id: txn.id,
       description: txn.description || '',
@@ -134,8 +138,10 @@ function Transactions({ refreshKey, onRefresh }) {
     const parsed = parseFloat(editState.amount)
     if (!editState.amount || isNaN(parsed) || parsed <= 0) return
     setActionLoading(true)
+    setActionError('')
     try {
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      const { error, data } = await supabase
         .from('transactions')
         .update({
           description: editState.description || editState.category || (editState.isExpense ? 'Expense' : 'Income'),
@@ -144,11 +150,17 @@ function Transactions({ refreshKey, onRefresh }) {
           date: editState.date,
         })
         .eq('id', editState.id)
-      if (!error) {
+        .eq('user_id', user.id)
+        .select()
+      if (!error && data?.length > 0) {
         setExpandedId(null)
         setEditState(null)
         await fetchTransactions()
         onRefresh?.()
+      } else if (!error) {
+        setActionError('Could not save — try again.')
+      } else {
+        setActionError('Could not save — try again.')
       }
     } finally {
       setActionLoading(false)
@@ -157,13 +169,22 @@ function Transactions({ refreshKey, onRefresh }) {
 
   async function confirmDelete(id) {
     setActionLoading(true)
+    setActionError('')
     try {
-      const { error } = await supabase.from('transactions').delete().eq('id', id)
-      if (!error) {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { error, data } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+      if (!error && data?.length > 0) {
         setExpandedId(null)
         setDeleteConfirmId(null)
         await fetchTransactions()
         onRefresh?.()
+      } else {
+        setActionError('Could not delete — try again.')
       }
     } finally {
       setActionLoading(false)
@@ -297,21 +318,26 @@ function Transactions({ refreshKey, onRefresh }) {
 
                 {/* Delete confirm */}
                 {expandedId === txn.id && deleteConfirmId === txn.id && (
-                  <div className="flex border-b border-gray-100">
-                    <button
-                      onClick={() => confirmDelete(txn.id)}
-                      disabled={actionLoading}
-                      className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors disabled:opacity-50"
-                    >
-                      {actionLoading ? '…' : 'Confirm delete'}
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirmId(null)}
-                      className="flex-1 py-3 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  <>
+                    <div className="flex border-b border-gray-100">
+                      <button
+                        onClick={() => confirmDelete(txn.id)}
+                        disabled={actionLoading}
+                        className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading ? '…' : 'Confirm delete'}
+                      </button>
+                      <button
+                        onClick={() => { setDeleteConfirmId(null); setActionError('') }}
+                        className="flex-1 py-3 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {actionError && (
+                      <p className="text-xs text-red-800 px-1 py-2 border-b border-gray-100">{actionError}</p>
+                    )}
+                  </>
                 )}
 
                 {/* Inline edit form */}
