@@ -12,10 +12,11 @@ function getMonthRange(month) {
   return { start, end }
 }
 
-function Home({ refreshKey, monthlyIncome }) {
+function Home({ refreshKey }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [displayName, setDisplayName] = useState('')
+  const [monthlyIncome, setMonthlyIncome] = useState(null)
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
 
   async function fetchData() {
@@ -26,10 +27,13 @@ function Home({ refreshKey, monthlyIncome }) {
 
     const { start, end } = getMonthRange(month)
 
-    const [budgetsRes, txRes] = await Promise.all([
+    const [budgetsRes, txRes, settingsRes] = await Promise.all([
       supabase.from('budgets').select('monthly_limit, category').eq('month', month).eq('user_id', user.id),
       supabase.from('transactions').select('amount, category').gte('date', start).lt('date', end).lt('amount', 0).eq('user_id', user.id),
+      supabase.from('user_settings').select('monthly_income').eq('user_id', user.id).maybeSingle(),
     ])
+
+    setMonthlyIncome(settingsRes.data?.monthly_income ?? null)
 
     const budgets = budgetsRes.data || []
     const expenses = txRes.data || []
@@ -104,7 +108,7 @@ function Home({ refreshKey, monthlyIncome }) {
       <div className="mb-10">
         <p className="text-base text-black mb-1">{monthlyIncome != null ? 'Available to spend' : 'Budget remaining'}</p>
         <p className={`text-8xl font-thin tracking-tight leading-none ${!loading && available < 0 ? 'text-red-800' : 'text-black'}`}>
-          {loading ? <span className="text-4xl text-gray-300">—</span> : fmt(available)}
+          {loading ? <span className="text-4xl text-gray-300">...</span> : fmt(available)}
         </p>
         <p className="text-sm text-gray-500 mt-4 pb-4 border-b border-gray-200">
           {daysLeft !== null
@@ -120,8 +124,8 @@ function Home({ refreshKey, monthlyIncome }) {
           <p className="text-sm font-medium text-black capitalize">
             {data.topInsight.category}
             {data.topInsight.limit != null
-              ? ` — ${fmt(data.topInsight.spent)} of ${fmt(data.topInsight.limit)}`
-              : ` — ${fmt(data.topInsight.spent)}`}
+              ? ` · ${fmt(data.topInsight.spent)} of ${fmt(data.topInsight.limit)}`
+              : ` · ${fmt(data.topInsight.spent)}`}
           </p>
         </div>
       )}
