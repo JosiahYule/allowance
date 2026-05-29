@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-
-const CATEGORIES = ['groceries', 'dining', 'transport', 'shopping', 'health', 'entertainment']
-const currentMonth = new Date().toISOString().slice(0, 7)
+import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
 
 function Budgets() {
   const [budgets, setBudgets] = useState([])
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [newLimit, setNewLimit] = useState('')
@@ -17,12 +16,15 @@ function Budgets() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       userIdRef.current = user.id
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('month', currentMonth)
-        .eq('user_id', user.id)
-      if (!error) setBudgets(data ?? [])
+
+      const currentMonth = new Date().toISOString().slice(0, 7)
+      const [{ data: budgetData }, allCats] = await Promise.all([
+        supabase.from('budgets').select('*').eq('month', currentMonth).eq('user_id', user.id),
+        fetchAllCategories(user.id),
+      ])
+
+      setBudgets(budgetData ?? [])
+      setCategories(allCats)
       setLoading(false)
     }
     load()
@@ -38,6 +40,7 @@ function Budgets() {
     setSaving(true)
     setSaveError('')
 
+    const currentMonth = new Date().toISOString().slice(0, 7)
     const existing = budgets.find(b => b.category === category)
     const { error } = existing
       ? await supabase.from('budgets').update({ monthly_limit: parsed }).eq('id', existing.id)
@@ -45,7 +48,7 @@ function Budgets() {
           user_id: userIdRef.current,
           category,
           monthly_limit: parsed,
-          month: currentMonth
+          month: currentMonth,
         })
 
     if (error) {
@@ -84,14 +87,14 @@ function Budgets() {
     )
   }
 
+  const currentMonthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+
   return (
     <div className="p-6 max-w-md mx-auto">
-      <p className="text-2xl font-bold text-black mb-2">Budgets</p>
-      <p className="text-sm text-gray-400 mb-8">
-        Monthly limits for {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
-      </p>
+      <p className="text-2xl font-semibold text-black mb-2">Budgets</p>
+      <p className="text-sm text-gray-400 mb-8">Monthly limits for {currentMonthLabel}</p>
 
-      {CATEGORIES.map(category => {
+      {categories.map(category => {
         const existing = budgets.find(b => b.category === category)
         const isEditing = editing === category
 
@@ -119,6 +122,7 @@ function Budgets() {
                     step="1"
                     inputMode="decimal"
                     autoFocus
+                    onKeyDown={e => e.key === 'Enter' && handleSave(category)}
                     className="flex-1 text-base outline-none border-b border-gray-300 pb-1"
                   />
                   <button
@@ -128,9 +132,7 @@ function Budgets() {
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
-                  <button onClick={cancelEditing} className="text-sm text-gray-400">
-                    Cancel
-                  </button>
+                  <button onClick={cancelEditing} className="text-sm text-gray-400">Cancel</button>
                 </div>
                 {saveError && <p className="text-xs text-red-500 mt-2">{saveError}</p>}
               </div>
