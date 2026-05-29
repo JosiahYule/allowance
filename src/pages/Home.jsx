@@ -55,8 +55,6 @@ function Home({ refreshKey }) {
   const pct = totalPlanned > 0 ? Math.min(totalSpent / totalPlanned, 1) : 0
 
   const today = new Date()
-  const daysLeft = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() - today.getDate()
-  const monthName = today.toLocaleString('default', { month: 'long' })
 
   const getGreeting = () => {
     const h = today.getHours()
@@ -114,35 +112,25 @@ function Home({ refreshKey }) {
             {fmtBig(available)}
           </p>
         )}
-        <p className="text-sm text-gray-400 mt-2">
-          {monthlyIncome != null ? 'Based on your income' : 'Based on your budgets'}
-        </p>
       </div>
 
       {/* Month progress */}
       <div className="border-t border-gray-100 pt-5 mb-7">
-        <p className="text-sm font-semibold text-black mb-4">Month progress</p>
-        <div className="flex justify-between items-baseline mb-2">
-          <p className="text-sm text-gray-500">
-            <span className="font-semibold text-black">
-              {loading ? '--' : '$' + totalSpent.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </span>{' '}spent
+        <div className="flex justify-between items-baseline mb-3">
+          <p className="text-2xl font-bold text-black">
+            {loading ? '--' : '$' + totalSpent.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </p>
-          <p className="text-sm text-gray-400">
-            {loading || totalPlanned === 0 ? 'No plan set' : '$' + totalPlanned.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' planned'}
-          </p>
+          {!loading && totalPlanned > 0 && (
+            <p className="text-sm text-gray-400">
+              of ${totalPlanned.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </p>
+          )}
         </div>
-        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+        <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
           <div
-            className="h-1.5 bg-black rounded-full transition-all"
+            className="h-1 bg-black rounded-full transition-all"
             style={{ width: loading ? '0%' : `${pct * 100}%` }}
           />
-        </div>
-        <div className="flex justify-between">
-          <p className="text-xs text-gray-400">{daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining in {monthName}</p>
-          {!loading && totalPlanned > 0 && (
-            <p className="text-xs text-gray-400">{Math.round(pct * 100)}%</p>
-          )}
         </div>
       </div>
 

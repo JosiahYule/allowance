@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import { Check, X } from 'lucide-react'
+import { ChevronRight, X, Check } from 'lucide-react'
 
 function Profile() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [monthlyIncome, setMonthlyIncome] = useState(null)
   const [editingIncome, setEditingIncome] = useState(false)
   const [incomeInput, setIncomeInput] = useState('')
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [savingIncome, setSavingIncome] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
+      const raw = user?.email?.split('@')[0] || ''
+      setDisplayName(raw.charAt(0).toUpperCase() + raw.slice(1))
       setEmail(user?.email || '')
       if (user) {
         const { data } = await supabase
@@ -28,38 +31,61 @@ function Profile() {
 
   async function saveIncome() {
     const parsed = parseFloat(incomeInput)
+    const value = incomeInput === '' || isNaN(parsed) ? null : parsed
     setSavingIncome(true)
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('user_settings').upsert({
       user_id: user.id,
-      monthly_income: incomeInput === '' ? null : (isNaN(parsed) ? null : parsed),
+      monthly_income: value,
       updated_at: new Date().toISOString(),
     })
-    setMonthlyIncome(incomeInput === '' ? null : (isNaN(parsed) ? null : parsed))
+    setMonthlyIncome(value)
     setEditingIncome(false)
     setSavingIncome(false)
   }
 
   async function handleLogout() {
+    setLoggingOut(true)
     await supabase.auth.signOut()
   }
 
-  const fmt = (v) => v != null ? `$${v.toLocaleString('en-CA', { minimumFractionDigits: 2 })}` : 'Not set'
+  const fmtIncome = (v) => v != null
+    ? '$' + v.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' / mo'
+    : 'Not set'
+
+  const Row = ({ label, value, onPress, chevron = true }) => (
+    <button
+      onClick={onPress}
+      className="w-full flex items-center justify-between py-4 border-b border-gray-100 text-left"
+    >
+      <p className="text-sm text-black">{label}</p>
+      <div className="flex items-center gap-2">
+        {value && <p className="text-sm text-gray-400">{value}</p>}
+        {chevron && <ChevronRight size={15} className="text-gray-300" />}
+      </div>
+    </button>
+  )
 
   return (
-    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
-      <p className="text-2xl font-semibold text-black mb-8">Profile</p>
+    <div className="max-w-md mx-auto">
 
-      <div className="mb-6 pb-6 border-b border-gray-100">
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Account</p>
-        <p className="text-sm text-black">{email}</p>
+      {/* User hero */}
+      <div className="px-6 pt-14 pb-8 border-b border-gray-100">
+        <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mb-4">
+          <span className="text-2xl font-bold text-white">{displayName.charAt(0) || '?'}</span>
+        </div>
+        <p className="text-2xl font-bold text-black">{displayName}</p>
+        <p className="text-sm text-gray-400 mt-1">{email}</p>
       </div>
 
-      {/* Monthly income */}
-      <div className="mb-6 pb-6 border-b border-gray-100">
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Monthly Income</p>
+      <div className="px-6 pt-6 pb-6">
+
+        {/* Finances */}
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Finances</p>
+
         {editingIncome ? (
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-3 py-4 border-b border-gray-100">
+            <p className="text-sm text-black flex-1">Monthly income</p>
             <span className="text-sm text-gray-400">$</span>
             <input
               type="number"
@@ -67,64 +93,45 @@ function Profile() {
               value={incomeInput}
               onChange={e => setIncomeInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveIncome()}
-              placeholder="0.00"
-              className="flex-1 text-sm outline-none border-b border-gray-200 pb-1"
+              placeholder="0"
+              className="w-24 text-sm text-right outline-none border-b border-gray-200 pb-0.5"
               autoFocus
             />
-            <button onClick={saveIncome} disabled={savingIncome} className="disabled:opacity-50">
-              <Check size={16} className="text-black" />
+            <button onClick={saveIncome} disabled={savingIncome} className="disabled:opacity-50 pl-1">
+              <Check size={15} className="text-black" />
             </button>
             <button onClick={() => setEditingIncome(false)}>
-              <X size={16} className="text-gray-300" />
+              <X size={15} className="text-gray-300" />
             </button>
           </div>
         ) : (
-          <div
-            className="flex justify-between items-center cursor-pointer"
-            onClick={() => { setIncomeInput(monthlyIncome != null ? String(monthlyIncome) : ''); setEditingIncome(true) }}
+          <Row
+            label="Monthly income"
+            value={fmtIncome(monthlyIncome)}
+            onPress={() => { setIncomeInput(monthlyIncome != null ? String(monthlyIncome) : ''); setEditingIncome(true) }}
+          />
+        )}
+
+        <Row label="Budgets" onPress={() => navigate('/budgets')} />
+        <Row label="Categories" onPress={() => navigate('/categories')} />
+
+        {/* Account */}
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mt-8 mb-1">Account</p>
+
+        {!loggingOut ? (
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between py-4 border-b border-gray-100 text-left"
           >
-            <p className="text-sm text-black">{fmt(monthlyIncome)}</p>
-            <span className="text-gray-300 text-xl">›</span>
+            <p className="text-sm text-black">Sign out</p>
+          </button>
+        ) : (
+          <div className="flex items-center justify-between py-4 border-b border-gray-100">
+            <p className="text-sm text-gray-400">Signing out...</p>
           </div>
         )}
-      </div>
 
-      <div
-        onClick={() => navigate('/budgets')}
-        className="mb-6 pb-6 border-b border-gray-100 cursor-pointer flex justify-between items-center"
-      >
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Budgets</p>
-          <p className="text-sm text-black">Set and edit monthly limits</p>
-        </div>
-        <span className="text-gray-300 text-xl">›</span>
       </div>
-
-      <div
-        onClick={() => navigate('/categories')}
-        className="mb-6 pb-6 border-b border-gray-100 cursor-pointer flex justify-between items-center"
-      >
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Categories</p>
-          <p className="text-sm text-black">Manage custom spending categories</p>
-        </div>
-        <span className="text-gray-300 text-xl">›</span>
-      </div>
-
-      {!showLogoutConfirm ? (
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className="w-full text-sm text-red-500 font-medium py-4 text-left"
-        >
-          Log out
-        </button>
-      ) : (
-        <div className="flex items-center gap-4 py-4">
-          <p className="text-sm text-gray-500 flex-1">Log out of your account?</p>
-          <button onClick={handleLogout} className="text-sm font-medium text-red-500">Yes, log out</button>
-          <button onClick={() => setShowLogoutConfirm(false)} className="text-sm text-gray-400">Cancel</button>
-        </div>
-      )}
     </div>
   )
 }
