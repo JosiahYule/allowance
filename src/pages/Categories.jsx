@@ -68,7 +68,7 @@ function Categories() {
   }
 
   return (
-    <div className="p-6 max-w-md mx-auto">
+    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <button onClick={() => navigate(-1)} className="text-gray-400">
           <ArrowLeft size={20} />

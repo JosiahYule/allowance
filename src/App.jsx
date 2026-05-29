@@ -7,6 +7,7 @@ import Profile from './pages/Profile'
 import Auth from './pages/Auth'
 import Budgets from './pages/Budgets'
 import Categories from './pages/Categories'
+import Onboarding from './pages/Onboarding'
 import BottomNav from './components/BottomNav'
 import AddExpense from './components/AddExpense'
 import Toast from './components/Toast'
@@ -63,6 +64,8 @@ async function processRecurringTransactions(userId) {
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [setupComplete, setSetupComplete] = useState(null) // null=unknown, true/false
+  const [monthlyIncome, setMonthlyIncome] = useState(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [toast, setToast] = useState(null)
@@ -70,18 +73,41 @@ function App() {
   const showToast = useCallback((msg) => setToast(msg), [])
   const dismissToast = useCallback(() => setToast(null), [])
 
+  async function loadUserSettings(userId) {
+    try {
+      const { data } = await supabase
+        .from('user_settings')
+        .select('setup_complete, monthly_income')
+        .eq('user_id', userId)
+        .maybeSingle()
+      setSetupComplete(data?.setup_complete ?? false)
+      setMonthlyIncome(data?.monthly_income ?? null)
+    } catch {
+      setSetupComplete(false)
+    }
+  }
+
   useEffect(() => {
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         setSession(session)
         setLoading(false)
-        if (session?.user) processRecurringTransactions(session.user.id)
+        if (session?.user) {
+          processRecurringTransactions(session.user.id)
+          loadUserSettings(session.user.id)
+        }
       })
       .catch(() => setLoading(false))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (session?.user) processRecurringTransactions(session.user.id)
+      if (session?.user) {
+        processRecurringTransactions(session.user.id)
+        loadUserSettings(session.user.id)
+      } else {
+        setSetupComplete(null)
+        setMonthlyIncome(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -97,11 +123,33 @@ function App() {
 
   if (!session) return <Auth />
 
+  // Show onboarding until setup_complete — null means still checking (show spinner)
+  if (setupComplete === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-7 h-7 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!setupComplete) {
+    return (
+      <Onboarding
+        user={session.user}
+        onComplete={(income) => {
+          setMonthlyIncome(income)
+          setSetupComplete(true)
+          setRefreshKey(k => k + 1)
+        }}
+      />
+    )
+  }
+
   return (
     <BrowserRouter>
       <div className="pb-16">
         <Routes>
-          <Route path="/" element={<Home refreshKey={refreshKey} />} />
+          <Route path="/" element={<Home refreshKey={refreshKey} monthlyIncome={monthlyIncome} />} />
           <Route path="/transactions" element={<Transactions refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />} />
           <Route path="/plan" element={<Plan refreshKey={refreshKey} />} />
           <Route path="/profile" element={<Profile />} />
