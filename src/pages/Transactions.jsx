@@ -177,7 +177,7 @@ function Transactions({ refreshKey, onRefresh }) {
   }
 
   return (
-    <div className="p-6 max-w-md mx-auto">
+    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
       <div className="flex justify-between items-center mb-6">
         <p className="text-2xl font-semibold text-black">Transactions</p>
       </div>

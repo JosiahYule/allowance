@@ -12,7 +12,7 @@ function getMonthRange(month) {
   return { start, end }
 }
 
-function Home({ refreshKey }) {
+function Home({ refreshKey, monthlyIncome }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [displayName, setDisplayName] = useState('')
@@ -51,7 +51,7 @@ function Home({ refreshKey }) {
       limit: budgets.find(b => b.category === topEntry[0])?.monthly_limit ?? null,
     } : null
 
-    setData({ available: totalBudget - totalSpent, topInsight })
+    setData({ totalBudget, totalSpent, topInsight })
     setLoading(false)
   }
 
@@ -78,10 +78,14 @@ function Home({ refreshKey }) {
     return 'Good evening'
   }
 
-  const available = data?.available ?? 0
+  const available = data
+    ? monthlyIncome != null
+      ? monthlyIncome - data.totalSpent
+      : data.totalBudget - data.totalSpent
+    : 0
 
   return (
-    <div className="p-6 max-w-md mx-auto">
+    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
       <div className="flex justify-between items-center mb-10">
         <div>
           <p className="text-black text-sm">{getGreeting()},</p>
@@ -98,7 +102,7 @@ function Home({ refreshKey }) {
       <MonthNav month={month} onChange={m => { setMonth(m); setData(null) }} />
 
       <div className="mb-10">
-        <p className="text-base text-black mb-1">Available to spend</p>
+        <p className="text-base text-black mb-1">{monthlyIncome != null ? 'Available to spend' : 'Budget remaining'}</p>
         <p className={`text-8xl font-thin tracking-tight leading-none ${!loading && available < 0 ? 'text-red-800' : 'text-black'}`}>
           {loading ? <span className="text-4xl text-gray-300">—</span> : fmt(available)}
         </p>
