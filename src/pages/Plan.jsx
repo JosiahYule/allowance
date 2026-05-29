@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Plus, X } from 'lucide-react'
-import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
+import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
 import MonthNav from '../components/MonthNav'
 
@@ -44,6 +44,14 @@ function Plan({ refreshKey }) {
   const [addSaving, setAddSaving] = useState(false)
   const [addError, setAddError] = useState('')
 
+  const [customIcons, setCustomIcons] = useState({})
+
+  // Edit budget limit state
+  const [editingLimit, setEditingLimit] = useState(false)
+  const [editLimitValue, setEditLimitValue] = useState('')
+  const [limitSaving, setLimitSaving] = useState(false)
+  const [limitError, setLimitError] = useState('')
+
   const [goals, setGoals] = useState([])
   const [goalsLoading, setGoalsLoading] = useState(true)
   const [selectedGoal, setSelectedGoal] = useState(null)
@@ -63,14 +71,16 @@ function Plan({ refreshKey }) {
     const { data: { user } } = await supabase.auth.getUser()
     setUserId(user.id)
     const { start, end } = getMonthRange(month)
-    const [budgetsRes, txRes, allCats] = await Promise.all([
+    const [budgetsRes, txRes, allCats, iconMap] = await Promise.all([
       supabase.from('budgets').select('*').eq('month', month).eq('user_id', user.id),
       supabase.from('transactions').select('*').gte('date', start).lt('date', end).lt('amount', 0).eq('user_id', user.id).order('date', { ascending: false }),
       fetchAllCategories(user.id),
+      fetchCategoryIconMap(user.id),
     ])
     if (budgetsRes.data) setBudgets(budgetsRes.data)
     if (txRes.data) setTransactions(txRes.data)
     setAllCategories(allCats)
+    setCustomIcons(iconMap)
     setLoading(false)
     fetchGoals(user.id)
   }
@@ -108,11 +118,34 @@ function Plan({ refreshKey }) {
   async function handleDeleteBudget() {
     if (!selectedBudget) return
     setDeleting(true)
-    await supabase.from('budgets').delete().eq('id', selectedBudget.id)
-    setSelectedBudget(null)
-    setDeleteConfirm(false)
+    const { error } = await supabase.from('budgets').delete().eq('id', selectedBudget.id)
+    if (!error) {
+      setSelectedBudget(null)
+      setDeleteConfirm(false)
+      fetchData()
+    }
     setDeleting(false)
-    fetchData()
+  }
+
+  async function handleEditLimit() {
+    const parsed = parseFloat(editLimitValue)
+    if (!editLimitValue || isNaN(parsed) || parsed <= 0) { setLimitError('Enter a valid amount.'); return }
+    setLimitSaving(true)
+    setLimitError('')
+    const { error } = await supabase
+      .from('budgets')
+      .update({ monthly_limit: parsed })
+      .eq('id', selectedBudget.id)
+    if (error) {
+      setLimitError('Failed to save. Try again.')
+    } else {
+      setEditingLimit(false)
+      setEditLimitValue('')
+      // Optimistically update selectedBudget so detail sheet reflects new limit
+      setSelectedBudget(prev => ({ ...prev, monthly_limit: parsed }))
+      fetchData()
+    }
+    setLimitSaving(false)
   }
 
   async function handleAddGoal() {
@@ -199,11 +232,11 @@ function Plan({ refreshKey }) {
             return (
               <button
                 key={budget.id}
-                onClick={() => { setSelectedBudget(budget); setDeleteConfirm(false) }}
+                onClick={() => { setSelectedBudget(budget); setDeleteConfirm(false); setEditingLimit(false); setLimitError('') }}
                 className="w-full flex items-center gap-4 py-4 border-b border-gray-100 text-left"
               >
                 <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CategoryIcon category={budget.category} size={15} className="text-gray-500" />
+                  <CategoryIcon category={budget.category} size={15} className="text-gray-500" customIcons={customIcons} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-1.5">
@@ -282,30 +315,61 @@ function Plan({ refreshKey }) {
       {/* Budget detail sheet */}
       {selectedBudget && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSelectedBudget(null)} />
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }} />
           <div className="fixed bottom-0 left-0 right-0 bg-white z-50 max-h-[85vh] flex flex-col border-t border-gray-200">
             <div className="flex-shrink-0 px-6 pt-5 pb-5 border-b border-gray-100">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
-                    <CategoryIcon category={selectedBudget.category} size={15} className="text-gray-500" />
+                    <CategoryIcon category={selectedBudget.category} size={15} className="text-gray-500" customIcons={customIcons} />
                   </div>
                   <p className="text-base font-semibold capitalize">{selectedBudget.category}</p>
                 </div>
-                <button onClick={() => setSelectedBudget(null)}>
+                <button onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }}>
                   <X size={18} className="text-gray-400" />
                 </button>
               </div>
 
               <div className="flex items-baseline gap-2 mb-3">
                 <span className="text-2xl font-bold">${fmt(selSpent)}</span>
-                <span className="text-sm text-gray-400">of ${fmt(selectedBudget.monthly_limit)}</span>
-                <span className={`text-sm ml-auto ${selOver ? 'text-red-800 font-medium' : 'text-gray-400'}`}>
-                  {selOver
-                    ? `Over $${fmt(Math.abs(selectedBudget.monthly_limit - selSpent))}`
-                    : `$${fmt(selectedBudget.monthly_limit - selSpent)} left`}
-                </span>
+                {!editingLimit ? (
+                  <>
+                    <span className="text-sm text-gray-400">of ${fmt(selectedBudget.monthly_limit)}</span>
+                    <button
+                      onClick={() => { setEditingLimit(true); setEditLimitValue(String(selectedBudget.monthly_limit)); setLimitError('') }}
+                      className="text-xs text-gray-400 ml-1 underline underline-offset-2"
+                    >
+                      Edit limit
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 flex-1 ml-1">
+                    <span className="text-sm text-gray-400">of $</span>
+                    <input
+                      type="number"
+                      value={editLimitValue}
+                      onChange={e => { setEditLimitValue(e.target.value); setLimitError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleEditLimit()}
+                      min="0"
+                      inputMode="decimal"
+                      autoFocus
+                      className="w-24 text-sm border-b border-gray-300 outline-none pb-0.5"
+                    />
+                    <button onClick={handleEditLimit} disabled={limitSaving} className="text-xs font-medium text-black disabled:opacity-50">
+                      {limitSaving ? '...' : 'Save'}
+                    </button>
+                    <button onClick={() => { setEditingLimit(false); setLimitError('') }} className="text-xs text-gray-400">Cancel</button>
+                  </div>
+                )}
+                {!editingLimit && (
+                  <span className={`text-sm ml-auto ${selOver ? 'text-red-800 font-medium' : 'text-gray-400'}`}>
+                    {selOver
+                      ? `Over $${fmt(Math.abs(selectedBudget.monthly_limit - selSpent))}`
+                      : `$${fmt(selectedBudget.monthly_limit - selSpent)} left`}
+                  </span>
+                )}
               </div>
+              {limitError && <p className="text-xs text-red-800 mb-2">{limitError}</p>}
               <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
                 <div className="h-1 bg-black rounded-full" style={{ width: `${selPct * 100}%` }} />
               </div>

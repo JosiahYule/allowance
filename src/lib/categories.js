@@ -16,3 +16,16 @@ export async function fetchAllCategories(userId) {
     return DEFAULT_CATEGORIES
   }
 }
+
+// Returns { categoryName: emoji } for all custom categories belonging to userId
+export async function fetchCategoryIconMap(userId) {
+  try {
+    const { data } = await supabase
+      .from('user_categories')
+      .select('name, icon')
+      .eq('user_id', userId)
+    return Object.fromEntries((data || []).map(c => [c.name, c.icon]))
+  } catch {
+    return {}
+  }
+}
