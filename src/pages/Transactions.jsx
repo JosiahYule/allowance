@@ -134,34 +134,40 @@ function Transactions({ refreshKey, onRefresh }) {
     const parsed = parseFloat(editState.amount)
     if (!editState.amount || isNaN(parsed) || parsed <= 0) return
     setActionLoading(true)
-    const { error } = await supabase
-      .from('transactions')
-      .update({
-        description: editState.description || editState.category || (editState.isExpense ? 'Expense' : 'Income'),
-        amount: editState.isExpense ? -parsed : parsed,
-        category: editState.isExpense ? (editState.category || null) : null,
-        date: editState.date,
-      })
-      .eq('id', editState.id)
-    if (!error) {
-      setExpandedId(null)
-      setEditState(null)
-      await fetchTransactions()
-      onRefresh?.()
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          description: editState.description || editState.category || (editState.isExpense ? 'Expense' : 'Income'),
+          amount: editState.isExpense ? -parsed : parsed,
+          category: editState.isExpense ? (editState.category || null) : null,
+          date: editState.date,
+        })
+        .eq('id', editState.id)
+      if (!error) {
+        setExpandedId(null)
+        setEditState(null)
+        await fetchTransactions()
+        onRefresh?.()
+      }
+    } finally {
+      setActionLoading(false)
     }
-    setActionLoading(false)
   }
 
   async function confirmDelete(id) {
     setActionLoading(true)
-    const { error } = await supabase.from('transactions').delete().eq('id', id)
-    if (!error) {
-      setExpandedId(null)
-      setDeleteConfirmId(null)
-      await fetchTransactions()
-      onRefresh?.()
+    try {
+      const { error } = await supabase.from('transactions').delete().eq('id', id)
+      if (!error) {
+        setExpandedId(null)
+        setDeleteConfirmId(null)
+        await fetchTransactions()
+        onRefresh?.()
+      }
+    } finally {
+      setActionLoading(false)
     }
-    setActionLoading(false)
   }
 
   if (loading) {

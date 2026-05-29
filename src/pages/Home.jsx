@@ -12,10 +12,11 @@ function getMonthRange(month) {
   return { start, end }
 }
 
-function Home({ refreshKey, monthlyIncome }) {
+function Home({ refreshKey }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [displayName, setDisplayName] = useState('')
+  const [monthlyIncome, setMonthlyIncome] = useState(null)
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
 
   async function fetchData() {
@@ -26,10 +27,13 @@ function Home({ refreshKey, monthlyIncome }) {
 
     const { start, end } = getMonthRange(month)
 
-    const [budgetsRes, txRes] = await Promise.all([
+    const [budgetsRes, txRes, settingsRes] = await Promise.all([
       supabase.from('budgets').select('monthly_limit, category').eq('month', month).eq('user_id', user.id),
       supabase.from('transactions').select('amount, category').gte('date', start).lt('date', end).lt('amount', 0).eq('user_id', user.id),
+      supabase.from('user_settings').select('monthly_income').eq('user_id', user.id).maybeSingle(),
     ])
+
+    setMonthlyIncome(settingsRes.data?.monthly_income ?? null)
 
     const budgets = budgetsRes.data || []
     const expenses = txRes.data || []

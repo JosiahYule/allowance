@@ -73,7 +73,7 @@ function Onboarding({ user, onComplete }) {
         }
       }
 
-      onComplete(monthlyIncome)
+      onComplete()
     } catch {
       setSaving(false)
     }
