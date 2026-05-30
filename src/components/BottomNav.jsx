@@ -6,17 +6,20 @@ function BottomNav() {
 
   const tabs = [
     { label: 'Home',         path: '/',             icon: Home },
-    { label: 'Transactions', path: '/transactions',  icon: List },
-    { label: 'Plan',         path: '/plan',          icon: PieChart },
-    { label: 'Profile',      path: '/profile',       icon: User },
+    { label: 'Transactions', path: '/transactions', icon: List },
+    { label: 'Plan',         path: '/plan',         icon: PieChart },
+    { label: 'Profile',      path: '/profile',      icon: User },
   ]
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-start pt-3"
+      className="fixed bottom-0 left-0 right-0 border-t border-line flex justify-around items-start pt-2.5"
       style={{
-        height: 'calc(4rem + env(safe-area-inset-bottom, 0px))',
+        height: 'calc(4.25rem + env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        backgroundColor: 'rgba(251, 250, 247, 0.85)',
+        backdropFilter: 'saturate(180%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       }}
     >
       {tabs.map(({ label, path, icon: Icon }) => {
@@ -25,14 +28,14 @@ function BottomNav() {
           <Link
             key={path}
             to={path}
-            className="flex flex-col items-center gap-1 w-16"
+            className="flex flex-col items-center gap-1.5 w-16 group"
           >
             <Icon
-              size={22}
-              strokeWidth={active ? 2.5 : 1.5}
-              className={active ? 'text-black' : 'text-gray-400'}
+              size={21}
+              strokeWidth={active ? 2.25 : 1.75}
+              className={`transition-colors ${active ? 'text-ink' : 'text-faint group-active:text-ink-soft'}`}
             />
-            <span className={`text-xs ${active ? 'text-black font-semibold' : 'text-gray-400'}`}>
+            <span className={`text-[10px] tracking-wide transition-colors ${active ? 'text-ink font-semibold' : 'text-faint'}`}>
               {label}
             </span>
           </Link>

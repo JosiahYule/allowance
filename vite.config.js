@@ -9,13 +9,13 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'pwa-icon.svg', 'apple-touch-icon-180x180.png'],
+      includeAssets: ['favicon.ico', 'pwa-icon.svg', 'apple-touch-icon-180x180.png', 'fonts/*.woff2'],
       manifest: {
         name: 'Allowance',
         short_name: 'Allowance',
         description: 'Simple personal expense tracking',
-        theme_color: '#000000',
-        background_color: '#ffffff',
+        theme_color: '#FBFAF7',
+        background_color: '#FBFAF7',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
@@ -57,21 +57,6 @@ export default defineConfig({
               expiration: {
                 maxEntries: 200,
                 maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            // Cache Google Fonts
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-cache',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
                 statuses: [0, 200],

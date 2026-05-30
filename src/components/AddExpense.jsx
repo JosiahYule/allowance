@@ -62,6 +62,8 @@ function AddExpense({ onClose, onSave }) {
     setDate(newDate)
   }
 
+  const isToday = date === new Date().toISOString().split('T')[0]
+
   const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-CA', {
     weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
   })
@@ -109,43 +111,49 @@ function AddExpense({ onClose, onSave }) {
     onSave()
   }
 
+  const chip = (selected) =>
+    `text-sm px-4 py-2 rounded-full transition-all capitalize ${
+      selected ? 'bg-ink text-paper' : 'bg-fill text-ink-soft active:scale-95'
+    }`
+
   return (
     <>
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 bg-white z-50 border-t border-gray-200">
+      <div className="fixed inset-0 bg-ink/30 z-40" onClick={onClose} />
+      <div className="sheet fixed bottom-0 left-0 right-0 z-50">
 
         {step > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <button onClick={back} className="flex items-center gap-1 text-sm text-gray-500">
+          <div className="flex items-center justify-between px-6 py-4">
+            <button onClick={back} className="flex items-center gap-1 text-[13px] text-muted active:text-ink transition-colors">
               <ArrowLeft size={15} />
               Back
             </button>
             <button onClick={onClose}>
-              <X size={18} className="text-gray-400" />
+              <X size={20} className="text-faint" />
             </button>
           </div>
         )}
 
-        <div className="px-6 pt-8 pb-10">
+        <div className={`px-6 pb-10 ${step > 1 ? 'pt-2' : 'pt-6'}`}>
 
           {/* Step 1 — Type */}
           {step === 1 && (
             <div>
-              <div className="flex items-center justify-end mb-8">
+              <div className="flex items-center justify-between mb-7">
+                <p className="text-lg font-semibold text-ink">Add</p>
                 <button onClick={onClose}>
-                  <X size={18} className="text-gray-400" />
+                  <X size={20} className="text-faint" />
                 </button>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => handleTypeSelect(true)}
-                  className="flex-1 py-10 text-lg font-medium border border-gray-200 text-black hover:bg-black hover:text-white transition-colors"
+                  className="flex-1 py-9 text-base font-medium rounded-3xl bg-fill text-ink active:scale-[0.98] transition-transform"
                 >
                   Expense
                 </button>
                 <button
                   onClick={() => handleTypeSelect(false)}
-                  className="flex-1 py-10 text-lg font-medium border border-gray-200 text-black hover:bg-black hover:text-white transition-colors"
+                  className="flex-1 py-9 text-base font-medium rounded-3xl bg-accent-soft text-accent active:scale-[0.98] transition-transform"
                 >
                   Income
                 </button>
@@ -156,8 +164,9 @@ function AddExpense({ onClose, onSave }) {
           {/* Step 2 — Amount */}
           {step === 2 && (
             <div>
+              <p className="eyebrow mb-5">{isExpense ? 'Expense amount' : 'Income amount'}</p>
               <div className="flex items-start gap-2 mb-10">
-                <span className="text-4xl font-thin text-gray-300 pt-2">$</span>
+                <span className="font-display font-light text-4xl text-faint pt-2">$</span>
                 <input
                   ref={amountRef}
                   type="number"
@@ -168,11 +177,11 @@ function AddExpense({ onClose, onSave }) {
                   min="0"
                   step="0.01"
                   inputMode="decimal"
-                  className="text-6xl font-thin flex-1 outline-none text-black min-w-0"
+                  className="font-display font-light text-6xl flex-1 outline-none text-ink min-w-0 tabular-nums placeholder-faint bg-transparent"
                 />
               </div>
-              {error && <p className="text-xs text-black mb-4">{error}</p>}
-              <button onClick={handleAmountNext} className="w-full py-4 bg-black text-white text-sm font-medium">
+              {error && <p className="text-[13px] text-danger mb-4">{error}</p>}
+              <button onClick={handleAmountNext} className="btn-primary w-full py-4 text-sm">
                 Continue
               </button>
             </div>
@@ -181,23 +190,19 @@ function AddExpense({ onClose, onSave }) {
           {/* Step 3 — Category (expenses only) */}
           {step === 3 && (
             <div>
-              <p className="text-2xl font-thin text-gray-300 mb-6">Category?</p>
+              <p className="text-xl font-semibold text-ink mb-6">Category</p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {categories.map(cat => (
                   <button
                     key={cat}
                     onClick={() => setCategory(c => c === cat ? '' : cat)}
-                    className={`text-sm px-4 py-2 border transition-colors capitalize ${
-                      category === cat
-                        ? 'border-black bg-black text-white'
-                        : 'border-gray-200 text-gray-600'
-                    }`}
+                    className={chip(category === cat)}
                   >
                     {cat}
                   </button>
                 ))}
               </div>
-              <button onClick={() => setStep(4)} className="w-full py-4 bg-black text-white text-sm font-medium">
+              <button onClick={() => setStep(4)} className="btn-primary w-full py-4 text-sm">
                 {category ? 'Continue' : 'Skip'}
               </button>
             </div>
@@ -206,17 +211,17 @@ function AddExpense({ onClose, onSave }) {
           {/* Step 4 — Description */}
           {step === 4 && (
             <div>
-              <p className="text-2xl font-thin text-gray-300 mb-6">What for?</p>
+              <p className="text-xl font-semibold text-ink mb-6">What for?</p>
               <input
                 ref={descRef}
                 type="text"
-                placeholder={category || 'Optional'}
+                placeholder={category || 'Add a note'}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && setStep(5)}
-                className="w-full text-xl font-thin outline-none text-black border-b border-gray-200 pb-3 mb-8"
+                className="w-full text-lg outline-none text-ink border-b border-line pb-3 mb-8 bg-transparent placeholder-faint focus:border-ink transition-colors"
               />
-              <button onClick={() => setStep(5)} className="w-full py-4 bg-black text-white text-sm font-medium">
+              <button onClick={() => setStep(5)} className="btn-primary w-full py-4 text-sm">
                 {description ? 'Continue' : 'Skip'}
               </button>
             </div>
@@ -225,23 +230,24 @@ function AddExpense({ onClose, onSave }) {
           {/* Step 5 — Date (custom picker) */}
           {step === 5 && (
             <div>
-              <p className="text-2xl font-thin text-gray-300 mb-6">Date?</p>
-              <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-8">
+              <p className="text-xl font-semibold text-ink mb-6">When?</p>
+              <div className="flex items-center justify-between bg-fill rounded-2xl p-2 mb-8">
                 <button
                   onClick={() => shiftDate(-1)}
-                  className="p-2 text-gray-400 active:text-black"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-ink-soft active:bg-surface transition-colors"
                 >
-                  <ChevronLeft size={22} />
+                  <ChevronLeft size={20} />
                 </button>
-                <p className="text-base font-medium text-black text-center">{formattedDate}</p>
+                <p className="text-[15px] font-medium text-ink text-center">{isToday ? 'Today' : formattedDate}</p>
                 <button
                   onClick={() => shiftDate(1)}
-                  className="p-2 text-gray-400 active:text-black"
+                  disabled={isToday}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-ink-soft active:bg-surface transition-colors disabled:opacity-25"
                 >
-                  <ChevronRight size={22} />
+                  <ChevronRight size={20} />
                 </button>
               </div>
-              <button onClick={() => setStep(6)} className="w-full py-4 bg-black text-white text-sm font-medium">
+              <button onClick={() => setStep(6)} className="btn-primary w-full py-4 text-sm">
                 Continue
               </button>
             </div>
@@ -250,7 +256,7 @@ function AddExpense({ onClose, onSave }) {
           {/* Step 6 — Repeat? */}
           {step === 6 && (
             <div>
-              <p className="text-2xl font-thin text-gray-300 mb-6">Repeat?</p>
+              <p className="text-xl font-semibold text-ink mb-6">Repeat?</p>
               <div className="flex gap-2 flex-wrap mb-8">
                 {[
                   { label: 'No', value: false },
@@ -273,22 +279,18 @@ function AddExpense({ onClose, onSave }) {
                           setRecurringInterval(opt.value)
                         }
                       }}
-                      className={`text-sm px-4 py-2 border transition-colors capitalize ${
-                        isSelected
-                          ? 'border-black bg-black text-white'
-                          : 'border-gray-200 text-gray-600'
-                      }`}
+                      className={chip(isSelected)}
                     >
                       {opt.label}
                     </button>
                   )
                 })}
               </div>
-              {error && <p className="text-xs text-black mb-4">{error}</p>}
+              {error && <p className="text-[13px] text-danger mb-4">{error}</p>}
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full py-4 bg-black text-white text-sm font-medium disabled:opacity-40"
+                className="btn-primary w-full py-4 text-sm"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>

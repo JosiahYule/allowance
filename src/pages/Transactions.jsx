@@ -72,7 +72,7 @@ function Transactions({ refreshKey, onRefresh }) {
 
   const fmt = (amount) => {
     const s = Math.abs(amount).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    return (amount < 0 ? '-' : '+') + '$' + s
+    return (amount < 0 ? '−' : '+') + '$' + s
   }
 
   const formatDateLabel = (dateStr) => {
@@ -167,33 +167,33 @@ function Transactions({ refreshKey, onRefresh }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-40">
-        <div className="w-6 h-6 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-line border-t-ink rounded-full animate-spin" />
       </div>
     )
   }
 
-  if (error) return <div className="px-6 pt-10 text-sm text-red-800">{error}</div>
+  if (error) return <div className="px-6 pt-10 text-sm text-danger">{error}</div>
 
   return (
-    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
+    <div className="px-5 pt-12 pb-8 max-w-md mx-auto">
 
-      <p className="text-2xl font-bold text-black mb-6">Transactions</p>
+      <p className="text-2xl font-semibold text-ink tracking-tight mb-6">Transactions</p>
 
       <MonthNav month={month} onChange={m => { setMonth(m); setAll([]) }} />
 
       {/* Search */}
-      <div className="flex items-center gap-2 border-b border-gray-200 py-2 mb-4">
-        <Search size={14} className="text-gray-300 flex-shrink-0" />
+      <div className="flex items-center gap-2 border-b border-line py-2 mb-4">
+        <Search size={14} className="text-faint flex-shrink-0" />
         <input
           type="text"
           placeholder="Search"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 text-sm outline-none text-black placeholder-gray-300"
+          className="flex-1 text-sm outline-none text-ink placeholder-faint"
         />
         {search && (
           <button onClick={() => setSearch('')}>
-            <X size={14} className="text-gray-300" />
+            <X size={14} className="text-faint" />
           </button>
         )}
       </div>
@@ -206,8 +206,8 @@ function Transactions({ refreshKey, onRefresh }) {
             onClick={() => setTypeFilter(val)}
             className={`text-sm pb-1 transition-colors ${
               typeFilter === val
-                ? 'text-black font-semibold border-b-2 border-black'
-                : 'text-gray-400'
+                ? 'text-ink font-semibold border-b-2 border-ink'
+                : 'text-muted'
             }`}
           >
             {label}
@@ -217,14 +217,14 @@ function Transactions({ refreshKey, onRefresh }) {
 
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted">
             {all.length === 0 ? 'No transactions this month.' : 'No results.'}
           </p>
         </div>
       ) : (
         Object.entries(grouped).map(([date, items]) => (
           <div key={date} className="mb-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
               {formatDateLabel(date)}
             </p>
             {items.map(txn => (
@@ -232,40 +232,40 @@ function Transactions({ refreshKey, onRefresh }) {
                 {/* Row */}
                 <button
                   onClick={() => toggleExpand(txn.id)}
-                  className="w-full flex items-center gap-3 py-3 border-b border-gray-100 text-left"
+                  className="w-full flex items-center gap-3 py-3 border-b border-line text-left"
                 >
-                  <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 bg-fill rounded-2xl flex items-center justify-center flex-shrink-0">
                     <CategoryIcon
                       category={txn.category}
                       isIncome={txn.amount >= 0}
                       size={15}
-                      className="text-gray-500"
+                      className="text-ink-soft"
                       customIcons={customIcons}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-black truncate">{txn.description}</p>
+                    <p className="text-sm font-medium text-ink truncate">{txn.description}</p>
                     {txn.category && (
-                      <p className="text-xs text-gray-400 capitalize">{txn.category}</p>
+                      <p className="text-xs text-muted capitalize">{txn.category}</p>
                     )}
                   </div>
-                  <p className={`text-sm font-medium flex-shrink-0 ${txn.amount >= 0 ? 'text-green-800' : 'text-black'}`}>
+                  <p className={`text-sm font-medium flex-shrink-0 tabular-nums ${txn.amount >= 0 ? 'text-accent' : 'text-ink'}`}>
                     {fmt(txn.amount)}
                   </p>
                 </button>
 
                 {/* Edit / Delete toggle */}
                 {expandedId === txn.id && !editState && !deleteConfirmId && (
-                  <div className="flex border-b border-gray-100">
+                  <div className="flex border-b border-line">
                     <button
                       onClick={() => startEdit(txn)}
-                      className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors"
+                      className="flex-1 py-3 text-xs font-medium text-ink border-r border-line active:bg-fill transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(txn.id)}
-                      className="flex-1 py-3 text-xs font-medium text-black hover:bg-black hover:text-white transition-colors"
+                      className="flex-1 py-3 text-xs font-medium text-ink active:bg-fill transition-colors"
                     >
                       Delete
                     </button>
@@ -275,43 +275,43 @@ function Transactions({ refreshKey, onRefresh }) {
                 {/* Delete confirm */}
                 {expandedId === txn.id && deleteConfirmId === txn.id && (
                   <>
-                    <div className="flex border-b border-gray-100">
+                    <div className="flex border-b border-line">
                       <button
                         onClick={() => confirmDelete(txn.id)}
                         disabled={actionLoading}
-                        className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+                        className="flex-1 py-3 text-xs font-medium text-ink border-r border-line active:bg-fill transition-colors disabled:opacity-50"
                       >
                         {actionLoading ? '...' : 'Confirm delete'}
                       </button>
                       <button
                         onClick={() => { setDeleteConfirmId(null); setActionError('') }}
-                        className="flex-1 py-3 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
+                        className="flex-1 py-3 text-xs text-muted active:bg-fill transition-colors"
                       >
                         Cancel
                       </button>
                     </div>
                     {actionError && (
-                      <p className="text-xs text-red-800 px-1 py-2 border-b border-gray-100">{actionError}</p>
+                      <p className="text-xs text-danger px-1 py-2 border-b border-line">{actionError}</p>
                     )}
                   </>
                 )}
 
                 {/* Inline edit form */}
                 {expandedId === txn.id && editState?.id === txn.id && (
-                  <div className="py-4 border-b border-gray-100 space-y-4">
+                  <div className="py-4 border-b border-line space-y-4">
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Description</p>
+                      <p className="text-xs text-muted mb-1">Description</p>
                       <input
                         type="text"
                         value={editState.description}
                         onChange={e => setEditState(s => ({ ...s, description: e.target.value }))}
-                        className="w-full text-sm outline-none border-b border-gray-200 pb-1 bg-transparent"
+                        className="w-full text-sm outline-none border-b border-line pb-1 bg-transparent"
                       />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Amount</p>
+                      <p className="text-xs text-muted mb-1">Amount</p>
                       <div className="flex items-center gap-1">
-                        <span className="text-sm text-gray-400">{editState.isExpense ? '-' : '+'}$</span>
+                        <span className="text-sm text-muted">{editState.isExpense ? '−' : '+'}$</span>
                         <input
                           type="number"
                           value={editState.amount}
@@ -319,18 +319,18 @@ function Transactions({ refreshKey, onRefresh }) {
                           min="0"
                           step="0.01"
                           inputMode="decimal"
-                          className="flex-1 text-sm outline-none border-b border-gray-200 pb-1 bg-transparent"
+                          className="flex-1 text-sm outline-none border-b border-line pb-1 bg-transparent"
                         />
                       </div>
                     </div>
                     {editState.isExpense && (
                       <div>
-                        <p className="text-xs text-gray-400 mb-2">Category</p>
+                        <p className="text-xs text-muted mb-2">Category</p>
                         <div className="flex flex-wrap gap-1.5">
                           <button
                             onClick={() => setEditState(s => ({ ...s, category: '' }))}
-                            className={`text-xs px-3 py-1.5 border capitalize transition-colors ${
-                              !editState.category ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-500'
+                            className={`text-xs px-3 py-1.5 rounded-full capitalize transition-colors ${
+                              !editState.category ? 'bg-ink text-paper' : 'bg-fill text-ink-soft'
                             }`}
                           >
                             None
@@ -339,8 +339,8 @@ function Transactions({ refreshKey, onRefresh }) {
                             <button
                               key={cat}
                               onClick={() => setEditState(s => ({ ...s, category: cat }))}
-                              className={`text-xs px-3 py-1.5 border capitalize transition-colors ${
-                                editState.category === cat ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-500'
+                              className={`text-xs px-3 py-1.5 rounded-full capitalize transition-colors ${
+                                editState.category === cat ? 'bg-ink text-paper' : 'bg-fill text-ink-soft'
                               }`}
                             >
                               {cat}
@@ -350,26 +350,26 @@ function Transactions({ refreshKey, onRefresh }) {
                       </div>
                     )}
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Date</p>
+                      <p className="text-xs text-muted mb-1">Date</p>
                       <input
                         type="date"
                         value={editState.date}
                         onChange={e => setEditState(s => ({ ...s, date: e.target.value }))}
-                        className="text-sm outline-none border-b border-gray-200 pb-1 bg-transparent"
+                        className="text-sm outline-none border-b border-line pb-1 bg-transparent"
                       />
                     </div>
-                    {actionError && <p className="text-xs text-red-800">{actionError}</p>}
-                    <div className="flex border-t border-gray-100 pt-1">
+                    {actionError && <p className="text-xs text-danger">{actionError}</p>}
+                    <div className="flex border-t border-line pt-1">
                       <button
                         onClick={saveEdit}
                         disabled={actionLoading}
-                        className="flex-1 py-3 text-xs font-medium text-black border-r border-gray-100 hover:bg-black hover:text-white transition-colors disabled:opacity-50"
+                        className="flex-1 py-3 text-xs font-medium text-ink border-r border-line active:bg-fill transition-colors disabled:opacity-50"
                       >
                         {actionLoading ? 'Saving...' : 'Save'}
                       </button>
                       <button
                         onClick={() => setEditState(null)}
-                        className="flex-1 py-3 text-xs text-gray-400 hover:bg-gray-50 transition-colors"
+                        className="flex-1 py-3 text-xs text-muted active:bg-fill transition-colors"
                       >
                         Cancel
                       </button>

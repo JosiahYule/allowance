@@ -182,7 +182,7 @@ function Plan({ refreshKey }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-40">
-        <div className="w-6 h-6 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-line border-t-ink rounded-full animate-spin" />
       </div>
     )
   }
@@ -193,17 +193,17 @@ function Plan({ refreshKey }) {
   const selTxns   = selectedBudget ? transactions.filter(t => t.category?.toLowerCase() === selectedBudget.category) : []
 
   return (
-    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
+    <div className="px-5 pt-12 pb-8 max-w-md mx-auto">
 
       {/* Budgets header */}
       <div className="flex justify-between items-center mb-6">
-        <p className="text-2xl font-bold text-black">Plan</p>
+        <p className="text-2xl font-semibold text-ink tracking-tight">Plan</p>
         {availableCategories.length > 0 && (
           <button
             onClick={() => { setNewCategory(''); setNewLimit(''); setAddError(''); setShowAddBudget(true) }}
-            className="w-8 h-8 bg-black flex items-center justify-center"
+            className="w-8 h-8 bg-ink flex items-center justify-center rounded-full active:scale-95 transition-transform"
           >
-            <Plus size={16} className="text-white" />
+            <Plus size={16} className="text-paper" />
           </button>
         )}
       </div>
@@ -213,10 +213,10 @@ function Plan({ refreshKey }) {
       {/* Budget list */}
       {budgets.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-sm text-gray-400 mb-3">No budgets for this month.</p>
+          <p className="text-sm text-muted mb-3">No budgets for this month.</p>
           <button
             onClick={() => { setNewCategory(''); setNewLimit(''); setAddError(''); setShowAddBudget(true) }}
-            className="text-sm font-medium text-black underline underline-offset-2"
+            className="text-sm font-medium text-ink underline underline-offset-2"
           >
             Add your first budget
           </button>
@@ -233,22 +233,22 @@ function Plan({ refreshKey }) {
               <button
                 key={budget.id}
                 onClick={() => { setSelectedBudget(budget); setDeleteConfirm(false); setEditingLimit(false); setLimitError('') }}
-                className="w-full flex items-center gap-4 py-4 border-b border-gray-100 text-left"
+                className="w-full flex items-center gap-4 py-4 border-b border-line text-left"
               >
-                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CategoryIcon category={budget.category} size={15} className="text-gray-500" customIcons={customIcons} />
+                <div className="w-9 h-9 bg-fill rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <CategoryIcon category={budget.category} size={15} className="text-ink-soft" customIcons={customIcons} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-1.5">
-                    <p className="text-sm font-medium text-black capitalize">{budget.category}</p>
-                    <p className={`text-xs ${over ? 'text-red-800 font-medium' : 'text-gray-400'}`}>
+                    <p className="text-sm font-medium text-ink capitalize">{budget.category}</p>
+                    <p className={`text-xs ${over ? 'text-danger font-medium' : 'text-muted'}`}>
                       {over ? `Over $${fmt(Math.abs(rem))}` : `$${fmt(rem)} left`}
                     </p>
                   </div>
-                  <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-1 bg-black rounded-full" style={{ width: `${pct * 100}%` }} />
+                  <div className="w-full h-1 bg-fill rounded-full overflow-hidden">
+                    <div className="h-1 bg-ink rounded-full" style={{ width: `${pct * 100}%` }} />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">${fmt(spent)} of ${fmt(budget.monthly_limit)}</p>
+                  <p className="text-xs text-muted mt-1">${fmt(spent)} of ${fmt(budget.monthly_limit)}</p>
                 </div>
               </button>
             )
@@ -257,27 +257,27 @@ function Plan({ refreshKey }) {
       )}
 
       {/* Goals */}
-      <div className="border-t border-gray-100 pt-6">
+      <div className="border-t border-line pt-6">
         <div className="flex justify-between items-center mb-5">
-          <p className="text-base font-semibold text-black">Goals</p>
+          <p className="text-base font-semibold text-ink">Goals</p>
           <button
             onClick={() => { setShowAddGoal(true); setGoalError('') }}
-            className="w-7 h-7 bg-black flex items-center justify-center"
+            className="w-7 h-7 bg-ink flex items-center justify-center rounded-full active:scale-95 transition-transform"
           >
-            <Plus size={14} className="text-white" />
+            <Plus size={14} className="text-paper" />
           </button>
         </div>
 
         {goalsLoading ? (
           <div className="flex justify-center py-6">
-            <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-line border-t-ink rounded-full animate-spin" />
           </div>
         ) : goals.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-gray-400 mb-3">No goals yet.</p>
+            <p className="text-sm text-muted mb-3">No goals yet.</p>
             <button
               onClick={() => { setShowAddGoal(true); setGoalError('') }}
-              className="text-sm font-medium text-black underline underline-offset-2"
+              className="text-sm font-medium text-ink underline underline-offset-2"
             >
               Create your first goal
             </button>
@@ -292,16 +292,16 @@ function Plan({ refreshKey }) {
                 <button
                   key={goal.id}
                   onClick={() => { setSelectedGoal(goal); setAddFundsAmount(''); setDeleteGoalConfirm(false) }}
-                  className="w-full text-left py-4 border-b border-gray-100"
+                  className="w-full text-left py-4 border-b border-line"
                 >
                   <div className="flex justify-between items-baseline mb-1.5">
-                    <p className="text-sm font-medium text-black">{goal.title}</p>
-                    <p className="text-xs text-gray-400">{Math.round(pct * 100)}%</p>
+                    <p className="text-sm font-medium text-ink">{goal.title}</p>
+                    <p className="text-xs text-muted">{Math.round(pct * 100)}%</p>
                   </div>
-                  <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mb-1.5">
-                    <div className="h-1 bg-black rounded-full" style={{ width: `${pct * 100}%` }} />
+                  <div className="w-full h-1 bg-fill rounded-full overflow-hidden mb-1.5">
+                    <div className="h-1 bg-ink rounded-full" style={{ width: `${pct * 100}%` }} />
                   </div>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted">
                     ${fmt(goal.current_amount)} of ${fmt(goal.target_amount)}
                     {done ? ' · Complete' : ` · $${fmt(goal.target_amount - goal.current_amount)} to go`}
                   </p>
@@ -315,18 +315,18 @@ function Plan({ refreshKey }) {
       {/* Budget detail sheet */}
       {selectedBudget && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 max-h-[85vh] flex flex-col border-t border-gray-200">
-            <div className="flex-shrink-0 px-6 pt-5 pb-5 border-b border-gray-100">
+          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }} />
+          <div className="sheet fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] flex flex-col">
+            <div className="flex-shrink-0 px-6 pt-5 pb-5 border-b border-line">
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
-                    <CategoryIcon category={selectedBudget.category} size={15} className="text-gray-500" customIcons={customIcons} />
+                  <div className="w-9 h-9 bg-fill rounded-2xl flex items-center justify-center">
+                    <CategoryIcon category={selectedBudget.category} size={15} className="text-ink-soft" customIcons={customIcons} />
                   </div>
                   <p className="text-base font-semibold capitalize">{selectedBudget.category}</p>
                 </div>
                 <button onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }}>
-                  <X size={18} className="text-gray-400" />
+                  <X size={18} className="text-muted" />
                 </button>
               </div>
 
@@ -334,17 +334,17 @@ function Plan({ refreshKey }) {
                 <span className="text-2xl font-bold">${fmt(selSpent)}</span>
                 {!editingLimit ? (
                   <>
-                    <span className="text-sm text-gray-400">of ${fmt(selectedBudget.monthly_limit)}</span>
+                    <span className="text-sm text-muted">of ${fmt(selectedBudget.monthly_limit)}</span>
                     <button
                       onClick={() => { setEditingLimit(true); setEditLimitValue(String(selectedBudget.monthly_limit)); setLimitError('') }}
-                      className="text-xs text-gray-400 ml-1 underline underline-offset-2"
+                      className="text-xs text-muted ml-1 underline underline-offset-2"
                     >
                       Edit limit
                     </button>
                   </>
                 ) : (
                   <div className="flex items-center gap-2 flex-1 ml-1">
-                    <span className="text-sm text-gray-400">of $</span>
+                    <span className="text-sm text-muted">of $</span>
                     <input
                       type="number"
                       value={editLimitValue}
@@ -353,54 +353,54 @@ function Plan({ refreshKey }) {
                       min="0"
                       inputMode="decimal"
                       autoFocus
-                      className="w-24 text-sm border-b border-gray-300 outline-none pb-0.5"
+                      className="w-24 text-sm border-b border-line outline-none pb-0.5 bg-transparent tabular-nums focus:border-ink transition-colors"
                     />
-                    <button onClick={handleEditLimit} disabled={limitSaving} className="text-xs font-medium text-black disabled:opacity-50">
+                    <button onClick={handleEditLimit} disabled={limitSaving} className="text-xs font-medium text-ink disabled:opacity-50">
                       {limitSaving ? '...' : 'Save'}
                     </button>
-                    <button onClick={() => { setEditingLimit(false); setLimitError('') }} className="text-xs text-gray-400">Cancel</button>
+                    <button onClick={() => { setEditingLimit(false); setLimitError('') }} className="text-xs text-muted">Cancel</button>
                   </div>
                 )}
                 {!editingLimit && (
-                  <span className={`text-sm ml-auto ${selOver ? 'text-red-800 font-medium' : 'text-gray-400'}`}>
+                  <span className={`text-sm ml-auto ${selOver ? 'text-danger font-medium' : 'text-muted'}`}>
                     {selOver
                       ? `Over $${fmt(Math.abs(selectedBudget.monthly_limit - selSpent))}`
                       : `$${fmt(selectedBudget.monthly_limit - selSpent)} left`}
                   </span>
                 )}
               </div>
-              {limitError && <p className="text-xs text-red-800 mb-2">{limitError}</p>}
-              <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden">
-                <div className="h-1 bg-black rounded-full" style={{ width: `${selPct * 100}%` }} />
+              {limitError && <p className="text-xs text-danger mb-2">{limitError}</p>}
+              <div className="w-full bg-fill h-1 rounded-full overflow-hidden">
+                <div className="h-1 bg-ink rounded-full" style={{ width: `${selPct * 100}%` }} />
               </div>
             </div>
 
             <div className="overflow-y-auto flex-1 px-6 pt-5 pb-8">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Transactions</p>
+              <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Transactions</p>
               {selTxns.length === 0 ? (
-                <p className="text-sm text-gray-400 py-4">No transactions yet.</p>
+                <p className="text-sm text-muted py-4">No transactions yet.</p>
               ) : selTxns.map(txn => (
-                <div key={txn.id} className="flex justify-between items-center py-3 border-b border-gray-100">
+                <div key={txn.id} className="flex justify-between items-center py-3 border-b border-line">
                   <div>
-                    <p className="text-sm font-medium text-black">{txn.description}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{fmtDate(txn.date)}</p>
+                    <p className="text-sm font-medium text-ink">{txn.description}</p>
+                    <p className="text-xs text-muted mt-0.5">{fmtDate(txn.date)}</p>
                   </div>
-                  <p className="text-sm text-black">-${fmtDec(Math.abs(txn.amount))}</p>
+                  <p className="text-sm text-ink">-${fmtDec(Math.abs(txn.amount))}</p>
                 </div>
               ))}
 
               <div className="mt-8">
                 {!deleteConfirm ? (
-                  <button onClick={() => setDeleteConfirm(true)} className="text-sm text-gray-400">
+                  <button onClick={() => setDeleteConfirm(true)} className="text-sm text-muted">
                     Remove this budget
                   </button>
                 ) : (
                   <div className="flex items-center gap-4">
-                    <p className="text-sm text-gray-500 flex-1">Remove {selectedBudget.category}?</p>
-                    <button onClick={handleDeleteBudget} disabled={deleting} className="text-sm font-medium text-black disabled:opacity-50">
+                    <p className="text-sm text-ink-soft flex-1">Remove {selectedBudget.category}?</p>
+                    <button onClick={handleDeleteBudget} disabled={deleting} className="text-sm font-medium text-ink disabled:opacity-50">
                       {deleting ? '...' : 'Remove'}
                     </button>
-                    <button onClick={() => setDeleteConfirm(false)} className="text-sm text-gray-400">Cancel</button>
+                    <button onClick={() => setDeleteConfirm(false)} className="text-sm text-muted">Cancel</button>
                   </div>
                 )}
               </div>
@@ -412,23 +412,23 @@ function Plan({ refreshKey }) {
       {/* Add budget sheet */}
       {showAddBudget && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowAddBudget(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 px-6 pt-5 pb-8 border-t border-gray-200">
+          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setShowAddBudget(false)} />
+          <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-7">
               <p className="text-base font-semibold">New budget</p>
               <button onClick={() => setShowAddBudget(false)}>
-                <X size={18} className="text-gray-400" />
+                <X size={18} className="text-muted" />
               </button>
             </div>
 
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Category</p>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Category</p>
             <div className="flex flex-wrap gap-2 mb-6">
               {availableCategories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setNewCategory(cat)}
-                  className={`text-sm px-3 py-1.5 border transition-colors capitalize ${
-                    newCategory === cat ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-600'
+                  className={`text-sm px-3 py-1.5 rounded-full transition-colors capitalize ${
+                    newCategory === cat ? 'bg-ink text-paper' : 'bg-fill text-ink-soft'
                   }`}
                 >
                   {cat}
@@ -436,9 +436,9 @@ function Plan({ refreshKey }) {
               ))}
             </div>
 
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Monthly limit</p>
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-3 mb-7">
-              <span className="text-xl text-gray-400">$</span>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Monthly limit</p>
+            <div className="flex items-center gap-2 border-b border-line pb-3 mb-7">
+              <span className="text-xl text-muted">$</span>
               <input
                 type="number"
                 placeholder="0"
@@ -447,18 +447,18 @@ function Plan({ refreshKey }) {
                 onKeyDown={e => e.key === 'Enter' && handleAddBudget()}
                 min="0"
                 inputMode="decimal"
-                className="text-xl flex-1 outline-none text-black"
+                className="text-xl flex-1 outline-none text-ink"
                 autoFocus
               />
             </div>
 
-            {addError && <p className="text-xs text-red-800 mb-4">{addError}</p>}
+            {addError && <p className="text-xs text-danger mb-4">{addError}</p>}
             <button
               onClick={handleAddBudget}
               disabled={addSaving}
-              className="w-full bg-black text-white text-sm font-medium py-4 disabled:opacity-40"
+              className="btn-primary w-full text-sm py-4"
             >
-              {addSaving ? 'Saving...' : 'Add budget'}
+              {addSaving ? 'Saving…' : 'Add budget'}
             </button>
           </div>
         </>
@@ -467,26 +467,26 @@ function Plan({ refreshKey }) {
       {/* Add goal sheet */}
       {showAddGoal && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowAddGoal(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 px-6 pt-5 pb-8 border-t border-gray-200">
+          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setShowAddGoal(false)} />
+          <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-7">
               <p className="text-base font-semibold">New goal</p>
-              <button onClick={() => setShowAddGoal(false)}><X size={18} className="text-gray-400" /></button>
+              <button onClick={() => setShowAddGoal(false)}><X size={18} className="text-muted" /></button>
             </div>
 
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">What are you saving for?</p>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">What are you saving for?</p>
             <input
               type="text"
               placeholder="e.g. Emergency fund"
               value={newGoalTitle}
               onChange={e => { setNewGoalTitle(e.target.value); setGoalError('') }}
               autoFocus
-              className="w-full text-base outline-none border-b border-gray-200 pb-2 mb-6"
+              className="w-full text-base outline-none border-b border-line pb-2 mb-6"
             />
 
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Target amount</p>
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-3 mb-7">
-              <span className="text-xl text-gray-400">$</span>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Target amount</p>
+            <div className="flex items-center gap-2 border-b border-line pb-3 mb-7">
+              <span className="text-xl text-muted">$</span>
               <input
                 type="number"
                 placeholder="0"
@@ -495,13 +495,13 @@ function Plan({ refreshKey }) {
                 onKeyDown={e => e.key === 'Enter' && handleAddGoal()}
                 min="0"
                 inputMode="decimal"
-                className="text-xl flex-1 outline-none text-black"
+                className="text-xl flex-1 outline-none text-ink"
               />
             </div>
 
-            {goalError && <p className="text-xs text-red-800 mb-4">{goalError}</p>}
-            <button onClick={handleAddGoal} disabled={goalSaving} className="w-full bg-black text-white text-sm font-medium py-4 disabled:opacity-40">
-              {goalSaving ? 'Saving...' : 'Create goal'}
+            {goalError && <p className="text-xs text-danger mb-4">{goalError}</p>}
+            <button onClick={handleAddGoal} disabled={goalSaving} className="btn-primary w-full text-sm py-4">
+              {goalSaving ? 'Saving…' : 'Create goal'}
             </button>
           </div>
         </>
@@ -510,11 +510,11 @@ function Plan({ refreshKey }) {
       {/* Goal detail sheet */}
       {selectedGoal && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSelectedGoal(null)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 px-6 pt-5 pb-8 border-t border-gray-200">
+          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setSelectedGoal(null)} />
+          <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-5">
               <p className="text-base font-semibold">{selectedGoal.title}</p>
-              <button onClick={() => setSelectedGoal(null)}><X size={18} className="text-gray-400" /></button>
+              <button onClick={() => setSelectedGoal(null)}><X size={18} className="text-muted" /></button>
             </div>
 
             {(() => {
@@ -522,19 +522,19 @@ function Plan({ refreshKey }) {
               return (
                 <>
                   <div className="flex items-baseline gap-2 mb-3">
-                    <span className="text-2xl font-bold">${fmt(selectedGoal.current_amount)}</span>
-                    <span className="text-sm text-gray-400">of ${fmt(selectedGoal.target_amount)}</span>
+                    <span className="text-2xl font-bold tabular-nums">${fmt(selectedGoal.current_amount)}</span>
+                    <span className="text-sm text-muted">of ${fmt(selectedGoal.target_amount)}</span>
                   </div>
-                  <div className="w-full bg-gray-100 h-1 rounded-full overflow-hidden mb-6">
-                    <div className="h-1 bg-black rounded-full" style={{ width: `${pct * 100}%` }} />
+                  <div className="w-full bg-fill h-1 rounded-full overflow-hidden mb-6">
+                    <div className="h-1 bg-ink rounded-full" style={{ width: `${pct * 100}%` }} />
                   </div>
                 </>
               )
             })()}
 
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Add funds</p>
-            <div className="flex items-center gap-2 border-b border-gray-200 pb-3 mb-6">
-              <span className="text-xl text-gray-400">$</span>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Add funds</p>
+            <div className="flex items-center gap-2 border-b border-line pb-3 mb-6">
+              <span className="text-xl text-muted">$</span>
               <input
                 type="number"
                 placeholder="0"
@@ -544,27 +544,27 @@ function Plan({ refreshKey }) {
                 min="0"
                 inputMode="decimal"
                 autoFocus
-                className="text-xl flex-1 outline-none text-black"
+                className="text-xl flex-1 outline-none text-ink"
               />
             </div>
 
             <button
               onClick={handleAddFunds}
               disabled={fundsSaving || !addFundsAmount}
-              className="w-full bg-black text-white text-sm font-medium py-4 mb-5 disabled:opacity-40"
+              className="btn-primary w-full text-sm py-4 mb-5"
             >
-              {fundsSaving ? 'Saving...' : 'Add funds'}
+              {fundsSaving ? 'Saving…' : 'Add funds'}
             </button>
 
             {!deleteGoalConfirm ? (
-              <button onClick={() => setDeleteGoalConfirm(true)} className="w-full text-center text-sm text-gray-400">
+              <button onClick={() => setDeleteGoalConfirm(true)} className="w-full text-center text-sm text-muted">
                 Remove this goal
               </button>
             ) : (
               <div className="flex items-center gap-4 justify-center">
-                <p className="text-sm text-gray-500">Remove goal?</p>
-                <button onClick={handleDeleteGoal} className="text-sm font-medium text-black">Remove</button>
-                <button onClick={() => setDeleteGoalConfirm(false)} className="text-sm text-gray-400">Cancel</button>
+                <p className="text-sm text-ink-soft">Remove goal?</p>
+                <button onClick={handleDeleteGoal} className="text-sm font-medium text-ink">Remove</button>
+                <button onClick={() => setDeleteGoalConfirm(false)} className="text-sm text-muted">Cancel</button>
               </div>
             )}
           </div>

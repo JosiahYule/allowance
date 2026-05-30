@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, X, Plus } from 'lucide-react'
 import { DEFAULT_CATEGORIES } from '../lib/categories'
+import { CategoryIcon } from '../lib/categoryIcons'
 
 const EMOJI_OPTIONS = ['🏠', '🎮', '🐾', '🌿', '✈️', '🎓', '💊', '🎁', '🍕', '☕', '🏋️', '🎵', '🚀', '🎨', '🐶', '💻']
 
@@ -68,87 +69,93 @@ function Categories() {
   }
 
   return (
-    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <button onClick={() => navigate(-1)} className="text-gray-400">
+    <div className="px-5 pt-12 pb-8 max-w-md mx-auto">
+      <div className="flex items-center gap-3 mb-9">
+        <button onClick={() => navigate(-1)} className="text-ink-soft active:opacity-60">
           <ArrowLeft size={20} />
         </button>
-        <p className="text-2xl font-semibold text-black">Categories</p>
+        <p className="text-2xl font-semibold text-ink tracking-tight">Categories</p>
       </div>
 
-      <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">Default</p>
-      <div className="flex flex-wrap gap-2 mb-8">
+      <p className="eyebrow mb-3 px-1">Default</p>
+      <div className="flex flex-wrap gap-2 mb-9">
         {DEFAULT_CATEGORIES.map(cat => (
-          <span key={cat} className="text-sm px-3 py-1.5 border border-gray-100 text-gray-400 capitalize rounded-full">
+          <span key={cat} className="inline-flex items-center gap-1.5 text-[13px] px-3 py-1.5 bg-fill text-ink-soft capitalize rounded-full">
+            <CategoryIcon category={cat} size={13} className="text-muted" />
             {cat}
           </span>
         ))}
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-xs text-gray-400 uppercase tracking-wide">Custom</p>
+      <div className="flex items-center justify-between mb-4 px-1">
+        <p className="eyebrow">Custom</p>
         {!unavailable && (
           <button
             onClick={() => { setShowAdd(true); setError('') }}
-            className="w-7 h-7 bg-black flex items-center justify-center rounded"
+            className="w-8 h-8 bg-ink flex items-center justify-center rounded-full active:scale-95 transition-transform"
+            aria-label="Add category"
           >
-            <Plus size={14} className="text-white" />
+            <Plus size={15} className="text-paper" />
           </button>
         )}
       </div>
 
       {unavailable && (
-        <p className="text-xs text-gray-400 bg-gray-50 rounded-xl p-4">
-          Custom categories require a database migration. See <code className="font-mono">supabase/migrations/</code> in the repo.
+        <p className="text-[13px] text-muted bg-fill rounded-2xl p-4 leading-relaxed">
+          Custom categories require a database migration. See <code className="font-mono text-ink">supabase/migrations/</code> in the repo.
         </p>
       )}
 
       {!loading && !unavailable && (
-        <>
-          {categories.length === 0 && (
-            <p className="text-sm text-gray-400 py-2">No custom categories yet.</p>
-          )}
-          {categories.map(cat => (
-            <div key={cat.id} className="flex items-center justify-between py-3 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{cat.icon}</span>
-                <p className="text-sm text-black capitalize">{cat.name}</p>
+        <div className="card p-2.5">
+          {categories.length === 0 ? (
+            <p className="text-[14px] text-muted px-3 py-4">No custom categories yet.</p>
+          ) : categories.map((cat, i) => (
+            <div key={cat.id}>
+              {i > 0 && <div className="h-px bg-line mx-3" />}
+              <div className="flex items-center justify-between px-3 py-3">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-2xl bg-fill flex items-center justify-center">
+                    <span className="text-lg leading-none">{cat.icon}</span>
+                  </div>
+                  <p className="text-[15px] text-ink capitalize">{cat.name}</p>
+                </div>
+                <button onClick={() => handleDelete(cat.id)} className="text-faint active:text-danger p-1 transition-colors">
+                  <X size={16} />
+                </button>
               </div>
-              <button onClick={() => handleDelete(cat.id)} className="text-gray-300 active:text-red-400 p-1">
-                <X size={16} />
-              </button>
             </div>
           ))}
-        </>
+        </div>
       )}
 
       {showAdd && (
         <>
-          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowAdd(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 px-6 pt-5 pb-8 border-t border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-base font-semibold">New category</p>
-              <button onClick={() => setShowAdd(false)}><X size={18} className="text-gray-400" /></button>
+          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setShowAdd(false)} />
+          <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
+            <div className="flex items-center justify-between mb-7">
+              <p className="text-lg font-semibold text-ink">New category</p>
+              <button onClick={() => setShowAdd(false)}><X size={20} className="text-faint" /></button>
             </div>
 
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Name</p>
+            <p className="eyebrow mb-2.5">Name</p>
             <input
               type="text"
               placeholder="e.g. Hobbies"
               value={newName}
               onChange={e => { setNewName(e.target.value); setError('') }}
               autoFocus
-              className="w-full text-base outline-none border-b border-gray-200 pb-2 mb-5"
+              className="w-full text-base outline-none border-b border-line pb-2.5 mb-6 bg-transparent placeholder-faint focus:border-ink transition-colors"
             />
 
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-3">Icon</p>
-            <div className="flex flex-wrap gap-3 mb-6">
+            <p className="eyebrow mb-3">Icon</p>
+            <div className="flex flex-wrap gap-2.5 mb-7">
               {EMOJI_OPTIONS.map(emoji => (
                 <button
                   key={emoji}
                   onClick={() => setNewIcon(emoji)}
-                  className={`text-2xl p-2 rounded-lg border-2 transition-colors ${
-                    newIcon === emoji ? 'border-black bg-gray-50' : 'border-transparent'
+                  className={`text-xl w-11 h-11 flex items-center justify-center rounded-2xl transition-all ${
+                    newIcon === emoji ? 'bg-ink scale-105' : 'bg-fill active:scale-95'
                   }`}
                 >
                   {emoji}
@@ -156,13 +163,9 @@ function Categories() {
               ))}
             </div>
 
-            {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
+            {error && <p className="text-[13px] text-danger mb-3">{error}</p>}
 
-            <button
-              onClick={handleAdd}
-              disabled={saving}
-              className="w-full bg-black text-white text-sm font-medium py-4 disabled:opacity-40"
-            >
+            <button onClick={handleAdd} disabled={saving} className="btn-primary w-full text-sm py-4">
               {saving ? 'Saving…' : 'Add category'}
             </button>
           </div>

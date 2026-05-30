@@ -1,14 +1,114 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* latin-ext */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url('/fonts/fraunces-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 @import "tailwindcss";
 
-* {
-  font-family: 'Inter', sans-serif;
+@theme {
+  /* Warm, paper-based neutral system — quiet and premium */
+  --color-paper:        #FBFAF7;  /* app background */
+  --color-surface:      #FFFFFF;  /* cards, sheets */
+  --color-ink:          #1A1917;  /* primary text — warm near-black */
+  --color-ink-soft:     #57534E;  /* secondary text */
+  --color-muted:        #8C877D;  /* labels, captions */
+  --color-faint:        #B8B2A7;  /* placeholders, disabled */
+  --color-line:         #EDE8E0;  /* hairlines, borders */
+  --color-fill:         #F3EFE8;  /* chips, icon tiles, tracks */
+  --color-accent:       #2F7D5B;  /* money / positive / income */
+  --color-accent-soft:  #E7F0EA;  /* positive backgrounds */
+  --color-danger:       #AF4B3C;  /* over budget / negative */
+
+  --font-sans:    'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
 }
 
+* {
+  font-family: var(--font-sans);
+}
+
+html, body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display serif — used for the hero amount and wordmark */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
+/* Floating surface card */
+.card {
+  background-color: var(--color-surface);
+  border-radius: 1.75rem;
+  box-shadow:
+    0 1px 2px rgba(26, 25, 23, 0.04),
+    0 20px 44px -24px rgba(26, 25, 23, 0.20);
+}
+
+/* Bottom sheet surface */
+.sheet {
+  background-color: var(--color-surface);
+  border-radius: 1.75rem 1.75rem 0 0;
+  box-shadow: 0 -12px 40px -16px rgba(26, 25, 23, 0.22);
+}
+
+/* Small tracked uppercase label */
+.eyebrow {
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+/* Primary pill action */
+.btn-primary {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.btn-primary:active { transform: scale(0.985); }
+.btn-primary:disabled { opacity: 0.4; }
+
 /* Safe area utilities for PWA on iOS */
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }

@@ -68,6 +68,7 @@ function Onboarding({ user, onComplete }) {
           await supabase.from('transactions').insert(inserts)
         } catch {
           await supabase.from('transactions').insert(
+            // eslint-disable-next-line no-unused-vars
             inserts.map(({ recurring, recurring_interval, ...rest }) => rest)
           )
         }
@@ -90,14 +91,14 @@ function Onboarding({ user, onComplete }) {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-between p-6 max-w-md mx-auto">
+    <div className="min-h-screen bg-paper flex flex-col justify-between px-6 max-w-md mx-auto">
 
       {/* Step indicators */}
-      <div className="flex gap-1.5 pt-safe">
+      <div className="flex gap-1.5 pt-safe mt-6">
         {[1, 2, 3].map(s => (
           <div
             key={s}
-            className={`h-0.5 flex-1 transition-colors ${step >= s ? 'bg-black' : 'bg-gray-200'}`}
+            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${step >= s ? 'bg-ink' : 'bg-line'}`}
           />
         ))}
       </div>
@@ -107,22 +108,22 @@ function Onboarding({ user, onComplete }) {
 
         {step === 1 && (
           <div>
-            <p className="text-4xl font-thin text-black mb-3">Hi, {name}.</p>
-            <p className="text-4xl font-thin text-black mb-8">Let's get you set up.</p>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              We'll ask a couple of quick questions so Allowance can show you exactly how much you have to work with each month.
+            <p className="font-display font-light text-5xl text-ink mb-3 tracking-tight">Hi, {name}.</p>
+            <p className="font-display font-light text-5xl text-ink mb-8 tracking-tight">Let's set you up.</p>
+            <p className="text-[15px] text-muted leading-relaxed">
+              A couple of quick questions, and Allowance will show you exactly how much you have to work with each month.
             </p>
           </div>
         )}
 
         {step === 2 && (
           <div>
-            <p className="text-2xl font-thin text-black mb-2">Monthly income</p>
-            <p className="text-sm text-gray-400 mb-8">
-              Your regular take-home pay, after tax. This helps us calculate what's available to spend.
+            <p className="text-2xl font-semibold text-ink mb-2 tracking-tight">Monthly income</p>
+            <p className="text-[15px] text-muted mb-9 leading-relaxed">
+              Your regular take-home pay, after tax. This is what we measure your spending against.
             </p>
-            <div className="flex items-baseline gap-1 border-b border-gray-200 pb-2 mb-3">
-              <span className="text-2xl text-gray-400 font-thin">$</span>
+            <div className="flex items-baseline gap-2 border-b border-line pb-3 mb-3">
+              <span className="font-display font-light text-3xl text-faint">$</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -130,23 +131,23 @@ function Onboarding({ user, onComplete }) {
                 value={income}
                 onChange={e => setIncome(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && setStep(3)}
-                className="flex-1 text-4xl font-thin outline-none text-black placeholder-gray-200"
+                className="flex-1 font-display font-light text-5xl outline-none text-ink placeholder-faint tabular-nums bg-transparent"
                 autoFocus
               />
             </div>
-            <p className="text-xs text-gray-300">Leave blank to skip. You can update this anytime in Profile.</p>
+            <p className="text-[13px] text-faint">Leave blank to skip. You can change this anytime.</p>
           </div>
         )}
 
         {step === 3 && (
           <div>
-            <p className="text-2xl font-thin text-black mb-2">Fixed bills</p>
-            <p className="text-sm text-gray-400 mb-6">
-              Rent, subscriptions, loan payments. Anything that comes out every month.
+            <p className="text-2xl font-semibold text-ink mb-2 tracking-tight">Fixed bills</p>
+            <p className="text-[15px] text-muted mb-6 leading-relaxed">
+              Rent, subscriptions, loan payments — anything that recurs every month.
             </p>
 
             {/* Add bill inputs */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-3 mb-4">
               <input
                 id="bill-desc"
                 type="text"
@@ -154,11 +155,11 @@ function Onboarding({ user, onComplete }) {
                 value={billDesc}
                 onChange={e => setBillDesc(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && document.getElementById('bill-amount')?.focus()}
-                className="w-full text-sm outline-none border-b border-gray-200 pb-1.5 placeholder-gray-300"
+                className="w-full text-[15px] outline-none border-b border-line pb-2 placeholder-faint bg-transparent focus:border-ink transition-colors"
               />
               <div className="flex gap-3">
-                <div className="flex items-baseline gap-0.5 border-b border-gray-200 pb-1.5 flex-1">
-                  <span className="text-sm text-gray-400">$</span>
+                <div className="flex items-baseline gap-1 border-b border-line pb-2 flex-1">
+                  <span className="text-[15px] text-muted">$</span>
                   <input
                     id="bill-amount"
                     type="number"
@@ -167,22 +168,22 @@ function Onboarding({ user, onComplete }) {
                     value={billAmount}
                     onChange={e => setBillAmount(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && document.getElementById('bill-day')?.focus()}
-                    className="w-full text-sm outline-none text-black placeholder-gray-300"
+                    className="w-full text-[15px] outline-none text-ink placeholder-faint tabular-nums bg-transparent"
                   />
                 </div>
-                <div className="flex items-baseline gap-0.5 border-b border-gray-200 pb-1.5 w-28">
-                  <span className="text-sm text-gray-400">Day</span>
+                <div className="flex items-baseline gap-1.5 border-b border-line pb-2 w-28">
+                  <span className="text-[15px] text-muted">Day</span>
                   <input
                     id="bill-day"
                     type="number"
                     inputMode="numeric"
-                    placeholder="1-31"
+                    placeholder="1–31"
                     min="1"
                     max="31"
                     value={billDay}
                     onChange={e => setBillDay(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && addBill()}
-                    className="w-full text-sm outline-none text-black placeholder-gray-300 ml-1.5"
+                    className="w-full text-[15px] outline-none text-ink placeholder-faint tabular-nums bg-transparent"
                   />
                 </div>
               </div>
@@ -190,23 +191,23 @@ function Onboarding({ user, onComplete }) {
 
             <button
               onClick={addBill}
-              className="w-full border border-gray-200 text-black text-sm font-medium py-3 mb-5 hover:bg-black hover:text-white transition-colors"
+              className="w-full bg-fill text-ink text-[14px] font-medium py-3 rounded-full mb-5 active:scale-[0.98] transition-transform"
             >
               Add bill
             </button>
 
             {/* Bill list */}
-            <div className="space-y-0 max-h-48 overflow-y-auto">
+            <div className="space-y-0 max-h-44 overflow-y-auto">
               {bills.map((b, i) => (
-                <div key={i} className="flex justify-between items-center py-2.5 border-b border-gray-100">
+                <div key={i} className="flex justify-between items-center py-2.5 border-b border-line last:border-0">
                   <div>
-                    <p className="text-sm text-black">{b.description}</p>
-                    {b.day && <p className="text-xs text-gray-400">{ordinal(b.day)} of each month</p>}
+                    <p className="text-[15px] text-ink">{b.description}</p>
+                    {b.day && <p className="text-[12px] text-muted">{ordinal(b.day)} of each month</p>}
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="text-sm text-gray-500">-${b.amount.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-[15px] text-ink-soft tabular-nums">−${b.amount.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
                     <button onClick={() => removeBill(i)}>
-                      <X size={12} className="text-gray-300" />
+                      <X size={14} className="text-faint" />
                     </button>
                   </div>
                 </div>
@@ -214,18 +215,18 @@ function Onboarding({ user, onComplete }) {
             </div>
 
             {bills.length > 0 && (
-              <div className="flex justify-between items-center mt-3 pt-2">
-                <p className="text-xs text-gray-400">Total bills</p>
-                <p className="text-sm font-medium text-black">
-                  -${totalBills.toLocaleString('en-CA', { minimumFractionDigits: 2 })}
+              <div className="flex justify-between items-center mt-4 pt-2">
+                <p className="text-[13px] text-muted">Total bills</p>
+                <p className="text-[15px] font-medium text-ink tabular-nums">
+                  −${totalBills.toLocaleString('en-CA', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             )}
 
             {incomeSet && bills.length > 0 && (
-              <div className="flex justify-between items-center mt-1">
-                <p className="text-xs text-gray-400">Remaining after bills</p>
-                <p className={`text-sm font-medium ${parsedIncome - totalBills < 0 ? 'text-red-800' : 'text-black'}`}>
+              <div className="flex justify-between items-center mt-1.5">
+                <p className="text-[13px] text-muted">Remaining after bills</p>
+                <p className={`text-[15px] font-semibold tabular-nums ${parsedIncome - totalBills < 0 ? 'text-danger' : 'text-accent'}`}>
                   ${Math.max(0, parsedIncome - totalBills).toLocaleString('en-CA', { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -236,11 +237,11 @@ function Onboarding({ user, onComplete }) {
       </div>
 
       {/* Navigation */}
-      <div className="pb-safe">
+      <div className="pb-safe mb-6">
         {step < 3 ? (
           <button
             onClick={() => setStep(s => s + 1)}
-            className="w-full bg-black text-white text-sm font-medium py-4 flex items-center justify-center gap-2"
+            className="btn-primary w-full text-sm py-4 flex items-center justify-center gap-2"
           >
             {step === 1 ? 'Get started' : 'Next'}
             <ChevronRight size={16} />
@@ -249,15 +250,15 @@ function Onboarding({ user, onComplete }) {
           <button
             onClick={finish}
             disabled={saving}
-            className="w-full bg-black text-white text-sm font-medium py-4 disabled:opacity-50"
+            className="btn-primary w-full text-sm py-4"
           >
-            {saving ? 'Setting up...' : bills.length > 0 ? 'Save and start' : "I'm ready"}
+            {saving ? 'Setting up…' : bills.length > 0 ? 'Save and start' : "I'm ready"}
           </button>
         )}
         {step > 1 && (
           <button
             onClick={() => setStep(s => s - 1)}
-            className="w-full text-center text-sm text-gray-400 mt-3 py-2"
+            className="w-full text-center text-[13px] text-muted mt-3 py-2"
           >
             Back
           </button>
@@ -266,7 +267,7 @@ function Onboarding({ user, onComplete }) {
           <button
             onClick={() => step === 2 ? setStep(3) : finish()}
             disabled={saving}
-            className="w-full text-center text-xs text-gray-300 mt-1 py-1 disabled:opacity-50"
+            className="w-full text-center text-[12px] text-faint mt-1 py-1 disabled:opacity-50"
           >
             Skip
           </button>

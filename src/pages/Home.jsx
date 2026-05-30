@@ -15,7 +15,6 @@ function getMonthRange(month) {
 function Home({ refreshKey }) {
   const [loading, setLoading] = useState(true)
   const [displayName, setDisplayName] = useState('')
-  const [monthlyIncome, setMonthlyIncome] = useState(null)
   const [totalSpent, setTotalSpent] = useState(0)
   const [totalEarned, setTotalEarned] = useState(0)
   const [totalPlanned, setTotalPlanned] = useState(0)
@@ -40,7 +39,6 @@ function Home({ refreshKey }) {
     ])
 
     const income = settingsRes.data?.monthly_income ?? null
-    setMonthlyIncome(income)
     setCustomIcons(iconMap)
 
     const txns = txRes.data || []
@@ -51,34 +49,39 @@ function Home({ refreshKey }) {
     setTotalSpent(spent)
     setTotalEarned(earned)
     setTotalPlanned(income ?? budgetTotal)
-    setRecent(txns.slice(0, 3))
+    setRecent(txns.slice(0, 4))
     setLoading(false)
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { fetchData() }, [refreshKey])
 
+  const hasPlan = totalPlanned > 0
   const available = totalPlanned - totalSpent
-  const pct = totalPlanned > 0 ? Math.min(totalSpent / totalPlanned, 1) : 0
-
-  const today = new Date()
+  const net = totalEarned - totalSpent
+  const heroValue = hasPlan ? available : net
+  const heroNegative = heroValue < 0
+  const pct = hasPlan ? Math.min(Math.max(totalSpent / totalPlanned, 0), 1) : 0
+  const over = hasPlan && totalSpent > totalPlanned
 
   const getGreeting = () => {
-    const h = today.getHours()
+    const h = new Date().getHours()
     if (h < 12) return 'Good morning'
     if (h < 18) return 'Good afternoon'
     return 'Good evening'
   }
 
   const fmtBig = (n) => {
-    const abs = Math.abs(n)
-    const s = abs.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-    return (n < 0 ? '-' : '') + '$' + s
+    const s = Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    return (n < 0 ? '−' : '') + '$' + s
   }
+
+  const fmtWhole = (n) =>
+    '$' + Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
   const fmtTxn = (amount) => {
     const s = Math.abs(amount).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    return (amount < 0 ? '-' : '+') + '$' + s
+    return (amount < 0 ? '−' : '+') + '$' + s
   }
 
   const formatDate = (dateStr) => {
@@ -93,72 +96,74 @@ function Home({ refreshKey }) {
   }
 
   return (
-    <div className="px-6 pt-10 pb-6 max-w-md mx-auto">
+    <div className="px-5 pt-12 pb-8 max-w-md mx-auto">
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <p className="text-sm text-gray-500">{getGreeting()},</p>
-          <p className="text-2xl font-bold text-black">{displayName || '...'}</p>
+          <p className="text-[13px] text-muted mb-0.5">{getGreeting()}</p>
+          <p className="text-xl font-semibold text-ink tracking-tight">{displayName || ' '}</p>
         </div>
         <Link
           to="/profile"
-          className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center"
+          className="w-10 h-10 rounded-full bg-fill flex items-center justify-center active:scale-95 transition-transform"
         >
-          <span className="text-sm text-gray-500">{displayName.charAt(0) || '?'}</span>
+          <span className="text-sm font-semibold text-ink-soft">{displayName.charAt(0) || '?'}</span>
         </Link>
       </div>
 
-      {/* Hero: available to spend */}
-      <div className="mb-7">
-        <p className="text-sm text-gray-500 mb-1">Available to spend</p>
+      {/* Money card — the centerpiece */}
+      <div className="card p-7 mb-9">
+        <p className="eyebrow mb-4">{hasPlan ? 'Available to spend' : 'Net this month'}</p>
+
         {loading ? (
-          <p className="text-5xl font-bold text-gray-200 tracking-tight">--</p>
+          <div className="h-[60px] w-48 bg-fill rounded-2xl animate-pulse mb-7" />
         ) : (
-          <p className={`text-5xl font-bold tracking-tight ${available < 0 ? 'text-red-800' : 'text-black'}`}>
-            {fmtBig(available)}
+          <p className={`font-display font-light text-[64px] leading-[0.9] tracking-tight tabular-nums mb-7 ${heroNegative ? 'text-danger' : 'text-ink'}`}>
+            {fmtBig(heroValue)}
           </p>
         )}
-      </div>
 
-      {/* Month progress */}
-      <div className="border-t border-gray-100 pt-5 mb-7">
-        <div className="flex justify-between items-baseline mb-3">
-          <p className="text-2xl font-bold text-black">
-            {loading ? '--' : '$' + totalSpent.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-          </p>
-          {!loading && totalPlanned > 0 && (
-            <p className="text-sm text-gray-400">
-              of ${totalPlanned.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </p>
-          )}
-        </div>
-        <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="h-1 bg-black rounded-full transition-all"
-            style={{ width: loading ? '0%' : `${pct * 100}%` }}
-          />
-        </div>
+        {hasPlan ? (
+          <>
+            <div className="h-1.5 w-full bg-fill rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${over ? 'bg-danger' : 'bg-ink'}`}
+                style={{ width: loading ? '0%' : `${pct * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-baseline mt-3">
+              <span className="text-[13px] text-ink-soft tabular-nums">
+                {loading ? '—' : `${fmtWhole(totalSpent)} spent`}
+              </span>
+              <span className="text-[13px] text-muted tabular-nums">
+                {loading ? '' : `of ${fmtWhole(totalPlanned)}`}
+              </span>
+            </div>
+          </>
+        ) : (
+          !loading && (
+            <Link to="/profile" className="inline-flex items-center text-[13px] text-accent font-medium">
+              Set a monthly income to track what's available →
+            </Link>
+          )
+        )}
 
-        {/* Earned / Spent / Net mini-stats */}
+        {/* Earned / Spent / Net */}
         {!loading && (totalEarned > 0 || totalSpent > 0) && (
-          <div className="flex justify-between mt-4 pt-4 border-t border-gray-50">
-            <div className="text-center">
-              <p className="text-xs text-gray-400 mb-0.5">Earned</p>
-              <p className="text-sm font-semibold text-green-800">
-                +${totalEarned.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </p>
+          <div className="grid grid-cols-3 mt-7 pt-6 border-t border-line">
+            <div>
+              <p className="eyebrow mb-1.5">In</p>
+              <p className="text-[15px] font-semibold text-accent tabular-nums">+{fmtWhole(totalEarned)}</p>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-400 mb-0.5">Spent</p>
-              <p className="text-sm font-semibold text-black">
-                -${totalSpent.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </p>
+            <div className="text-center border-x border-line">
+              <p className="eyebrow mb-1.5">Out</p>
+              <p className="text-[15px] font-semibold text-ink tabular-nums">−{fmtWhole(totalSpent)}</p>
             </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-400 mb-0.5">Net</p>
-              <p className={`text-sm font-semibold ${totalEarned - totalSpent >= 0 ? 'text-black' : 'text-red-800'}`}>
-                {totalEarned - totalSpent >= 0 ? '+' : '-'}${Math.abs(totalEarned - totalSpent).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            <div className="text-right">
+              <p className="eyebrow mb-1.5">Net</p>
+              <p className={`text-[15px] font-semibold tabular-nums ${net < 0 ? 'text-danger' : 'text-ink'}`}>
+                {net < 0 ? '−' : '+'}{fmtWhole(net)}
               </p>
             </div>
           </div>
@@ -166,52 +171,49 @@ function Home({ refreshKey }) {
       </div>
 
       {/* Recent transactions */}
-      <div className="border-t border-gray-100 pt-5">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-sm font-semibold text-black">Recent transactions</p>
-          <Link to="/transactions" className="text-xs text-gray-400">View all</Link>
-        </div>
-
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gray-100 rounded-full flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="h-3 bg-gray-100 rounded w-32 mb-1.5" />
-                  <div className="h-2.5 bg-gray-100 rounded w-16" />
-                </div>
-                <div className="h-3 bg-gray-100 rounded w-16" />
-              </div>
-            ))}
-          </div>
-        ) : recent.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4">No transactions this month. Tap + Add to get started.</p>
-        ) : (
-          <div>
-            {recent.map(txn => (
-              <div key={txn.id} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
-                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CategoryIcon
-                    category={txn.category}
-                    isIncome={txn.amount >= 0}
-                    size={15}
-                    className="text-gray-500"
-                    customIcons={customIcons}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-black truncate">{txn.description}</p>
-                  <p className="text-xs text-gray-400">{formatDate(txn.date)}</p>
-                </div>
-                <p className={`text-sm font-medium flex-shrink-0 ${txn.amount >= 0 ? 'text-green-800' : 'text-black'}`}>
-                  {fmtTxn(txn.amount)}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="flex justify-between items-center mb-2 px-1">
+        <p className="text-[15px] font-semibold text-ink">Recent</p>
+        <Link to="/transactions" className="text-[13px] text-muted active:text-ink transition-colors">All</Link>
       </div>
+
+      {loading ? (
+        <div className="space-y-1">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-3.5 py-3">
+              <div className="w-10 h-10 bg-fill rounded-2xl flex-shrink-0 animate-pulse" />
+              <div className="flex-1">
+                <div className="h-3.5 bg-fill rounded-full w-32 mb-2 animate-pulse" />
+                <div className="h-3 bg-fill rounded-full w-16 animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : recent.length === 0 ? (
+        <p className="text-[14px] text-muted py-6 px-1">Nothing yet this month. Tap Add to get started.</p>
+      ) : (
+        <div>
+          {recent.map(txn => (
+            <div key={txn.id} className="flex items-center gap-3.5 py-3.5 px-1">
+              <div className="w-10 h-10 bg-fill rounded-2xl flex items-center justify-center flex-shrink-0">
+                <CategoryIcon
+                  category={txn.category}
+                  isIncome={txn.amount >= 0}
+                  size={16}
+                  className="text-ink-soft"
+                  customIcons={customIcons}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-medium text-ink truncate">{txn.description}</p>
+                <p className="text-[13px] text-muted">{formatDate(txn.date)}</p>
+              </div>
+              <p className={`text-[15px] font-medium flex-shrink-0 tabular-nums ${txn.amount >= 0 ? 'text-accent' : 'text-ink'}`}>
+                {fmtTxn(txn.amount)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
     </div>
   )
