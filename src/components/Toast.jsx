@@ -7,7 +7,10 @@ function Toast({ message, onDismiss }) {
   }, [onDismiss])
 
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-black text-white text-sm px-5 py-2.5 rounded-full z-[60] shadow-lg pointer-events-none">
+    <div
+      className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-ink text-paper text-[13px] font-medium px-5 py-2.5 rounded-full z-[60] pointer-events-none"
+      style={{ boxShadow: '0 10px 30px -8px rgba(26, 25, 23, 0.5)' }}
+    >
       {message}
     </div>
   )

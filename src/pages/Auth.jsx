@@ -35,14 +35,17 @@ function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center p-8 max-w-md mx-auto">
-      <div className="mb-12">
-        <p className="text-sm text-gray-500 mb-1">Welcome to</p>
-        <p className="text-4xl font-thin text-black">Allowance</p>
+    <div className="min-h-screen flex flex-col justify-center px-8 max-w-md mx-auto">
+      <div className="mb-14">
+        <p className="eyebrow mb-3">Welcome to</p>
+        <p className="font-display font-light text-6xl text-ink tracking-tight">Allowance</p>
+        <p className="text-[15px] text-muted mt-4 leading-relaxed">
+          The simplest way to see what you have left to spend.
+        </p>
       </div>
 
-      <div className="mb-6">
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Email</p>
+      <div className="mb-5">
+        <label className="eyebrow block mb-2.5">Email</label>
         <input
           type="email"
           placeholder="you@example.com"
@@ -50,12 +53,12 @@ function Auth() {
           onChange={e => setEmail(e.target.value)}
           onKeyDown={handleKeyDown}
           autoComplete="email"
-          className="w-full text-base outline-none text-black border-b border-gray-200 pb-2"
+          className="w-full text-[16px] outline-none text-ink placeholder-faint border-b border-line pb-2.5 bg-transparent focus:border-ink transition-colors"
         />
       </div>
 
-      <div className="mb-8">
-        <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Password</p>
+      <div className="mb-9">
+        <label className="eyebrow block mb-2.5">Password</label>
         <input
           type="password"
           placeholder="••••••••"
@@ -63,21 +66,21 @@ function Auth() {
           onChange={e => setPassword(e.target.value)}
           onKeyDown={handleKeyDown}
           autoComplete={isLogin ? 'current-password' : 'new-password'}
-          className="w-full text-base outline-none text-black border-b border-gray-200 pb-2"
+          className="w-full text-[16px] outline-none text-ink placeholder-faint border-b border-line pb-2.5 bg-transparent focus:border-ink transition-colors"
         />
       </div>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      {error && <p className="text-[13px] text-danger mb-5">{error}</p>}
 
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full bg-black text-white text-sm font-medium py-4 rounded-full mb-4 disabled:opacity-50 transition-opacity"
+        className="btn-primary w-full text-sm py-4 mb-5"
       >
-        {loading ? 'Please wait...' : isLogin ? 'Log in' : 'Sign up'}
+        {loading ? 'Please wait…' : isLogin ? 'Log in' : 'Create account'}
       </button>
 
-      <button onClick={toggleMode} className="text-sm text-gray-400 text-center">
+      <button onClick={toggleMode} className="text-[13px] text-muted text-center active:text-ink transition-colors">
         {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
       </button>
     </div>

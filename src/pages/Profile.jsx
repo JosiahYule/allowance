@@ -1,7 +1,23 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, X, Check } from 'lucide-react'
+import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart } from 'lucide-react'
+
+function Row({ icon: Icon, label, value, onPress }) {
+  return (
+    <button
+      onClick={onPress}
+      className="w-full flex items-center gap-3.5 py-3.5 text-left active:opacity-60 transition-opacity"
+    >
+      <div className="w-9 h-9 rounded-2xl bg-fill flex items-center justify-center flex-shrink-0">
+        <Icon size={16} className="text-ink-soft" />
+      </div>
+      <p className="text-[15px] text-ink flex-1">{label}</p>
+      {value && <p className="text-[14px] text-muted tabular-nums">{value}</p>}
+      <ChevronRight size={16} className="text-faint" />
+    </button>
+  )
+}
 
 function Profile() {
   const navigate = useNavigate()
@@ -53,40 +69,27 @@ function Profile() {
     ? '$' + v.toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' / mo'
     : 'Not set'
 
-  const Row = ({ label, value, onPress, chevron = true }) => (
-    <button
-      onClick={onPress}
-      className="w-full flex items-center justify-between py-4 border-b border-gray-100 text-left"
-    >
-      <p className="text-sm text-black">{label}</p>
-      <div className="flex items-center gap-2">
-        {value && <p className="text-sm text-gray-400">{value}</p>}
-        {chevron && <ChevronRight size={15} className="text-gray-300" />}
-      </div>
-    </button>
-  )
-
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto px-5">
 
       {/* User hero */}
-      <div className="px-6 pt-14 pb-8 border-b border-gray-100">
-        <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mb-4">
-          <span className="text-2xl font-bold text-white">{displayName.charAt(0) || '?'}</span>
+      <div className="pt-16 pb-9">
+        <div className="w-16 h-16 bg-ink rounded-full flex items-center justify-center mb-4">
+          <span className="text-2xl font-display font-light text-paper">{displayName.charAt(0) || '?'}</span>
         </div>
-        <p className="text-2xl font-bold text-black">{displayName}</p>
-        <p className="text-sm text-gray-400 mt-1">{email}</p>
+        <p className="text-2xl font-semibold text-ink tracking-tight">{displayName}</p>
+        <p className="text-[14px] text-muted mt-1">{email}</p>
       </div>
 
-      <div className="px-6 pt-6 pb-6">
-
-        {/* Finances */}
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Finances</p>
-
+      {/* Finances */}
+      <div className="card p-2.5 mb-5">
         {editingIncome ? (
-          <div className="flex items-center gap-3 py-4 border-b border-gray-100">
-            <p className="text-sm text-black flex-1">Monthly income</p>
-            <span className="text-sm text-gray-400">$</span>
+          <div className="flex items-center gap-3 px-3 py-3">
+            <div className="w-9 h-9 rounded-2xl bg-fill flex items-center justify-center flex-shrink-0">
+              <Wallet size={16} className="text-ink-soft" />
+            </div>
+            <p className="text-[15px] text-ink flex-1">Income</p>
+            <span className="text-[14px] text-muted">$</span>
             <input
               type="number"
               inputMode="decimal"
@@ -94,44 +97,46 @@ function Profile() {
               onChange={e => setIncomeInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveIncome()}
               placeholder="0"
-              className="w-24 text-sm text-right outline-none border-b border-gray-200 pb-0.5"
+              className="w-20 text-[15px] text-right outline-none border-b border-line pb-0.5 bg-transparent tabular-nums"
               autoFocus
             />
-            <button onClick={saveIncome} disabled={savingIncome} className="disabled:opacity-50 pl-1">
-              <Check size={15} className="text-black" />
+            <button onClick={saveIncome} disabled={savingIncome} className="disabled:opacity-50 pl-1 text-accent">
+              <Check size={17} />
             </button>
-            <button onClick={() => setEditingIncome(false)}>
-              <X size={15} className="text-gray-300" />
+            <button onClick={() => setEditingIncome(false)} className="text-faint">
+              <X size={17} />
             </button>
           </div>
         ) : (
           <Row
+            icon={Wallet}
             label="Monthly income"
             value={fmtIncome(monthlyIncome)}
             onPress={() => { setIncomeInput(monthlyIncome != null ? String(monthlyIncome) : ''); setEditingIncome(true) }}
           />
         )}
-
-        <Row label="Budgets" onPress={() => navigate('/budgets')} />
-        <Row label="Categories" onPress={() => navigate('/categories')} />
-
-        {/* Account */}
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mt-8 mb-1">Account</p>
-
-        {!loggingOut ? (
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-between py-4 border-b border-gray-100 text-left"
-          >
-            <p className="text-sm text-black">Sign out</p>
-          </button>
-        ) : (
-          <div className="flex items-center justify-between py-4 border-b border-gray-100">
-            <p className="text-sm text-gray-400">Signing out...</p>
-          </div>
-        )}
-
+        <div className="h-px bg-line mx-3" />
+        <Row icon={PieChart} label="Budgets" onPress={() => navigate('/budgets')} />
+        <div className="h-px bg-line mx-3" />
+        <Row icon={Tag} label="Categories" onPress={() => navigate('/categories')} />
       </div>
+
+      {/* Account */}
+      <p className="eyebrow px-3 mb-2">Account</p>
+      <div className="card p-2.5">
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="w-full flex items-center gap-3.5 py-3.5 text-left active:opacity-60 transition-opacity"
+        >
+          <div className="w-9 h-9 rounded-2xl bg-fill flex items-center justify-center flex-shrink-0">
+            <LogOut size={16} className="text-danger" />
+          </div>
+          <p className="text-[15px] text-ink">{loggingOut ? 'Signing out…' : 'Sign out'}</p>
+        </button>
+      </div>
+
+      <p className="text-center text-[12px] text-faint mt-8">Allowance</p>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import Home from './pages/Home'
 import Transactions from './pages/Transactions'
 import Plan from './pages/Plan'
@@ -163,7 +164,7 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-7 h-7 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+        <div className="w-7 h-7 border-2 border-line border-t-ink rounded-full animate-spin" />
       </div>
     )
   }
@@ -174,7 +175,7 @@ function App() {
   if (setupComplete === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-7 h-7 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+        <div className="w-7 h-7 border-2 border-line border-t-ink rounded-full animate-spin" />
       </div>
     )
   }
@@ -220,10 +221,15 @@ function App() {
 
       <button
         onClick={() => setShowAddExpense(true)}
-        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px) + 1rem)' }}
-        className="fixed left-1/2 -translate-x-1/2 bg-black text-white text-sm font-medium px-8 py-4 rounded-full shadow-lg z-10"
+        aria-label="Add transaction"
+        style={{
+          bottom: 'calc(4.25rem + env(safe-area-inset-bottom, 0px) + 0.875rem)',
+          boxShadow: '0 8px 28px -6px rgba(26, 25, 23, 0.45)',
+        }}
+        className="fixed left-1/2 -translate-x-1/2 bg-ink text-paper text-sm font-medium pl-5 pr-6 py-3.5 rounded-full z-10 flex items-center gap-1.5 active:scale-[0.97] transition-transform"
       >
-        + Add
+        <Plus size={17} strokeWidth={2.5} />
+        Add
       </button>
       <BottomNav />
     </BrowserRouter>
