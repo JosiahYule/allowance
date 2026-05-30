@@ -61,8 +61,6 @@ function Home({ refreshKey }) {
   const net = totalEarned - totalSpent
   const heroValue = hasPlan ? available : net
   const heroNegative = heroValue < 0
-  const pct = hasPlan ? Math.min(Math.max(totalSpent / totalPlanned, 0), 1) : 0
-  const over = hasPlan && totalSpent > totalPlanned
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -75,9 +73,6 @@ function Home({ refreshKey }) {
     const s = Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
     return (n < 0 ? '−' : '') + '$' + s
   }
-
-  const fmtWhole = (n) =>
-    '$' + Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
   const fmtTxn = (amount) => {
     const s = Math.abs(amount).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -117,56 +112,17 @@ function Home({ refreshKey }) {
         <p className="eyebrow mb-4">{hasPlan ? 'Available to spend' : 'Net this month'}</p>
 
         {loading ? (
-          <div className="h-[60px] w-48 bg-fill rounded-2xl animate-pulse mb-7" />
+          <div className="h-[76px] w-52 bg-fill rounded-2xl animate-pulse" />
         ) : (
-          <p className={`font-display font-light text-[64px] leading-[0.9] tracking-tight tabular-nums mb-7 ${heroNegative ? 'text-danger' : 'text-ink'}`}>
+          <p className={`font-display font-light text-[80px] leading-[0.9] tracking-tight tabular-nums ${heroNegative ? 'text-danger' : 'text-ink'}`}>
             {fmtBig(heroValue)}
           </p>
         )}
 
-        {hasPlan ? (
-          <>
-            <div className="h-1.5 w-full bg-fill rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ease-out ${over ? 'bg-danger' : 'bg-ink'}`}
-                style={{ width: loading ? '0%' : `${pct * 100}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-baseline mt-3">
-              <span className="text-[13px] text-ink-soft tabular-nums">
-                {loading ? '—' : `${fmtWhole(totalSpent)} spent`}
-              </span>
-              <span className="text-[13px] text-muted tabular-nums">
-                {loading ? '' : `of ${fmtWhole(totalPlanned)}`}
-              </span>
-            </div>
-          </>
-        ) : (
-          !loading && (
-            <Link to="/profile" className="inline-flex items-center text-[13px] text-accent font-medium">
-              Set a monthly income to track what's available →
-            </Link>
-          )
-        )}
-
-        {/* Earned / Spent / Net */}
-        {!loading && (totalEarned > 0 || totalSpent > 0) && (
-          <div className="grid grid-cols-3 mt-7 pt-6 border-t border-line">
-            <div>
-              <p className="eyebrow mb-1.5">In</p>
-              <p className="text-[15px] font-semibold text-accent tabular-nums">+{fmtWhole(totalEarned)}</p>
-            </div>
-            <div className="text-center border-x border-line">
-              <p className="eyebrow mb-1.5">Out</p>
-              <p className="text-[15px] font-semibold text-ink tabular-nums">−{fmtWhole(totalSpent)}</p>
-            </div>
-            <div className="text-right">
-              <p className="eyebrow mb-1.5">Net</p>
-              <p className={`text-[15px] font-semibold tabular-nums ${net < 0 ? 'text-danger' : 'text-ink'}`}>
-                {net < 0 ? '−' : '+'}{fmtWhole(net)}
-              </p>
-            </div>
-          </div>
+        {!hasPlan && !loading && (
+          <Link to="/profile" className="inline-flex items-center text-[13px] text-accent font-medium mt-5">
+            Set a monthly income to track what's available →
+          </Link>
         )}
       </div>
 
