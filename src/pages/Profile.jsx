@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart } from 'lucide-react'
+import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart, Repeat } from 'lucide-react'
 
 function Row({ icon: Icon, label, value, onPress }) {
   return (
@@ -30,7 +30,7 @@ function Profile() {
   const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    getCurrentUser().then(async (user) => {
       const raw = user?.email?.split('@')[0] || ''
       setDisplayName(raw.charAt(0).toUpperCase() + raw.slice(1))
       setEmail(user?.email || '')
@@ -49,7 +49,7 @@ function Profile() {
     const parsed = parseFloat(incomeInput)
     const value = incomeInput === '' || isNaN(parsed) ? null : parsed
     setSavingIncome(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     await supabase.from('user_settings').upsert({
       user_id: user.id,
       monthly_income: value,
@@ -117,6 +117,8 @@ function Profile() {
         )}
         <div className="h-px bg-line mx-3" />
         <Row icon={PieChart} label="Budgets" onPress={() => navigate('/budgets')} />
+        <div className="h-px bg-line mx-3" />
+        <Row icon={Repeat} label="Recurring" onPress={() => navigate('/recurring')} />
         <div className="h-px bg-line mx-3" />
         <Row icon={Tag} label="Categories" onPress={() => navigate('/categories')} />
       </div>

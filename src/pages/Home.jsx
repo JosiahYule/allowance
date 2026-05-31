@@ -1,16 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { CategoryIcon } from '../lib/categoryIcons'
 import { fetchCategoryIconMap } from '../lib/categories'
-
-function getMonthRange(month) {
-  const [y, m] = month.split('-').map(Number)
-  const start = `${month}-01`
-  const endY = m === 12 ? y + 1 : y
-  const endM = m === 12 ? 1 : m + 1
-  return { start, end: `${endY}-${String(endM).padStart(2, '0')}-01` }
-}
+import { getMonthRange } from '../lib/dates'
 
 function Home({ refreshKey }) {
   const [loading, setLoading] = useState(true)
@@ -25,7 +18,7 @@ function Home({ refreshKey }) {
 
   async function fetchData() {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     const raw = user?.email?.split('@')[0] || ''
     setDisplayName(raw.charAt(0).toUpperCase() + raw.slice(1))
 

@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { Plus, X } from 'lucide-react'
 import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
 import MonthNav from '../components/MonthNav'
-
-function getMonthRange(month) {
-  const [y, m] = month.split('-').map(Number)
-  const start = `${month}-01`
-  const endY = m === 12 ? y + 1 : y
-  const endM = m === 12 ? 1 : m + 1
-  return { start, end: `${endY}-${String(endM).padStart(2, '0')}-01` }
-}
+import SpendingInsights from '../components/SpendingInsights'
+import { getMonthRange } from '../lib/dates'
 
 function fmt(n) {
   return Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -68,7 +62,7 @@ function Plan({ refreshKey }) {
 
   async function fetchData() {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     setUserId(user.id)
     const { start, end } = getMonthRange(month)
     const [budgetsRes, txRes, allCats, iconMap] = await Promise.all([
@@ -118,7 +112,7 @@ function Plan({ refreshKey }) {
   async function handleDeleteBudget() {
     if (!selectedBudget) return
     setDeleting(true)
-    const { error } = await supabase.from('budgets').delete().eq('id', selectedBudget.id)
+    const { error } = await supabase.from('budgets').delete().eq('id', selectedBudget.id).eq('user_id', userId)
     if (!error) {
       setSelectedBudget(null)
       setDeleteConfirm(false)
@@ -136,6 +130,7 @@ function Plan({ refreshKey }) {
       .from('budgets')
       .update({ monthly_limit: parsed })
       .eq('id', selectedBudget.id)
+      .eq('user_id', userId)
     if (error) {
       setLimitError('Failed to save. Try again.')
     } else {
@@ -166,14 +161,14 @@ function Plan({ refreshKey }) {
     if (!addFundsAmount || isNaN(parsed) || parsed <= 0) return
     setFundsSaving(true)
     const newAmount = Math.min((selectedGoal.current_amount || 0) + parsed, selectedGoal.target_amount)
-    const { error } = await supabase.from('goals').update({ current_amount: newAmount }).eq('id', selectedGoal.id)
+    const { error } = await supabase.from('goals').update({ current_amount: newAmount }).eq('id', selectedGoal.id).eq('user_id', userId)
     if (!error) { setAddFundsAmount(''); setSelectedGoal(null); fetchGoals(userId) }
     setFundsSaving(false)
   }
 
   async function handleDeleteGoal() {
     if (!selectedGoal) return
-    await supabase.from('goals').delete().eq('id', selectedGoal.id)
+    await supabase.from('goals').delete().eq('id', selectedGoal.id).eq('user_id', userId)
     setSelectedGoal(null)
     setDeleteGoalConfirm(false)
     fetchGoals(userId)
@@ -210,7 +205,11 @@ function Plan({ refreshKey }) {
 
       <MonthNav month={month} onChange={m => { setMonth(m); setBudgets([]); setTransactions([]) }} />
 
+      {/* Spending breakdown */}
+      <SpendingInsights transactions={transactions} customIcons={customIcons} />
+
       {/* Budget list */}
+      <p className="eyebrow mb-3">Budgets</p>
       {budgets.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm text-muted mb-3">No budgets for this month.</p>

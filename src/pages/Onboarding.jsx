@@ -64,9 +64,11 @@ function Onboarding({ user, onComplete }) {
             recurring_interval: 'monthly',
           }
         })
-        try {
-          await supabase.from('transactions').insert(inserts)
-        } catch {
+        // supabase-js resolves with { error } rather than throwing, so check
+        // the returned error and retry without the recurring columns if the
+        // migration that adds them hasn't been run yet.
+        const { error: billsError } = await supabase.from('transactions').insert(inserts)
+        if (billsError && (billsError.code === '42703' || billsError.message?.includes('column'))) {
           await supabase.from('transactions').insert(
             // eslint-disable-next-line no-unused-vars
             inserts.map(({ recurring, recurring_interval, ...rest }) => rest)

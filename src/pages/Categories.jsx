@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, X, Plus } from 'lucide-react'
 import { DEFAULT_CATEGORIES } from '../lib/categories'
@@ -23,7 +23,7 @@ function Categories() {
   async function fetchCategories() {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUser()
       const { data, error } = await supabase
         .from('user_categories')
         .select('*')
@@ -45,7 +45,7 @@ function Categories() {
     if (!newIcon) { setError('Pick an icon.'); return }
 
     setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     const { error: err } = await supabase.from('user_categories').insert({
       user_id: user.id,
       name: newName.trim().toLowerCase(),
