@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { ArrowLeft, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
 
@@ -20,7 +20,7 @@ function AddExpense({ onClose, onSave }) {
   const descRef = useRef(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    getCurrentUser().then(user => {
       if (user) fetchAllCategories(user.id).then(setCategories)
     })
   }, [])
@@ -73,7 +73,7 @@ function AddExpense({ onClose, onSave }) {
     setSaving(true)
     setError('')
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
 
     const insertData = {
       user_id: user.id,

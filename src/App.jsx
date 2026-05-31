@@ -13,10 +13,17 @@ import BottomNav from './components/BottomNav'
 import AddExpense from './components/AddExpense'
 import Toast from './components/Toast'
 import { supabase } from './lib/supabase'
+import { toLocalDateStr, todayStr } from './lib/dates'
+
+// Guard so the (potentially many) recurring queries run at most once per user
+// per app load — onAuthStateChange fires INITIAL_SESSION on top of getSession().
+const processedRecurring = new Set()
 
 async function processRecurringTransactions(userId) {
+  if (processedRecurring.has(userId)) return
+  processedRecurring.add(userId)
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = todayStr()
     const currentMonth = today.slice(0, 7)
     const startOfMonth = `${currentMonth}-01`
     const [cy, cm] = currentMonth.split('-').map(Number)
@@ -80,7 +87,7 @@ async function processRecurringTransactions(userId) {
         const dueDates = []
         while (cursor <= monthEndDate) {
           if (cursor >= monthStartDate && cursor <= todayDate) {
-            dueDates.push(cursor.toISOString().split('T')[0])
+            dueDates.push(toLocalDateStr(cursor))
           }
           cursor.setDate(cursor.getDate() + intervalDays)
         }

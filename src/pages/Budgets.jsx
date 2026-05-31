@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
 
@@ -19,7 +19,7 @@ function Budgets() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUser()
       userIdRef.current = user.id
 
       const currentMonth = new Date().toISOString().slice(0, 7)

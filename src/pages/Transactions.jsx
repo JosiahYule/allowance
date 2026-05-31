@@ -1,17 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { supabase, getCurrentUser } from '../lib/supabase'
 import { Search, X } from 'lucide-react'
 import MonthNav from '../components/MonthNav'
 import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
-
-function getMonthRange(month) {
-  const [y, m] = month.split('-').map(Number)
-  const start = `${month}-01`
-  const endY = m === 12 ? y + 1 : y
-  const endM = m === 12 ? 1 : m + 1
-  return { start, end: `${endY}-${String(endM).padStart(2, '0')}-01` }
-}
+import { getMonthRange } from '../lib/dates'
 
 function Transactions({ refreshKey, onRefresh }) {
   const [all, setAll] = useState([])
@@ -30,19 +23,9 @@ function Transactions({ refreshKey, onRefresh }) {
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState('')
 
-  useEffect(() => { fetchTransactions() }, [refreshKey, month])
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        fetchAllCategories(user.id).then(setCategories)
-        fetchCategoryIconMap(user.id).then(setCustomIcons)
-      }
-    })
-  }, [])
-
-  async function fetchTransactions() {
+  const fetchTransactions = useCallback(async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     const { start, end } = getMonthRange(month)
     const { data, error } = await supabase
       .from('transactions')
@@ -55,7 +38,19 @@ function Transactions({ refreshKey, onRefresh }) {
     if (error) setError('Failed to load transactions.')
     else { setAll(data); setError('') }
     setLoading(false)
-  }
+  }, [month])
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchTransactions() }, [refreshKey, fetchTransactions])
+
+  useEffect(() => {
+    getCurrentUser().then(user => {
+      if (user) {
+        fetchAllCategories(user.id).then(setCategories)
+        fetchCategoryIconMap(user.id).then(setCustomIcons)
+      }
+    })
+  }, [])
 
   const filtered = useMemo(() => all.filter(t => {
     if (search && !t.description?.toLowerCase().includes(search.toLowerCase())) return false
@@ -115,7 +110,7 @@ function Transactions({ refreshKey, onRefresh }) {
     setActionLoading(true)
     setActionError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUser()
       const { error, data } = await supabase
         .from('transactions')
         .update({
@@ -144,7 +139,7 @@ function Transactions({ refreshKey, onRefresh }) {
     setActionLoading(true)
     setActionError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUser()
       const { error, data } = await supabase
         .from('transactions')
         .delete()

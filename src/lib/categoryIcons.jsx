@@ -10,7 +10,7 @@ const ICONS = {
   bills:         Receipt,
 }
 
-export function getCategoryIcon(category) {
+function getCategoryIcon(category) {
   return ICONS[category?.toLowerCase()] || Tag
 }
 
