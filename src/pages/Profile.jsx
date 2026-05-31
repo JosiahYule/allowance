@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart } from 'lucide-react'
+import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart, Repeat } from 'lucide-react'
 
 function Row({ icon: Icon, label, value, onPress }) {
   return (
@@ -117,6 +117,8 @@ function Profile() {
         )}
         <div className="h-px bg-line mx-3" />
         <Row icon={PieChart} label="Budgets" onPress={() => navigate('/budgets')} />
+        <div className="h-px bg-line mx-3" />
+        <Row icon={Repeat} label="Recurring" onPress={() => navigate('/recurring')} />
         <div className="h-px bg-line mx-3" />
         <Row icon={Tag} label="Categories" onPress={() => navigate('/categories')} />
       </div>

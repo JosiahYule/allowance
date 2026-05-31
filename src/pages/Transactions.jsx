@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase, getCurrentUser } from '../lib/supabase'
-import { Search, X } from 'lucide-react'
+import { Search, X, Repeat } from 'lucide-react'
 import MonthNav from '../components/MonthNav'
 import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
@@ -240,9 +240,16 @@ function Transactions({ refreshKey, onRefresh }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{txn.description}</p>
-                    {txn.category && (
-                      <p className="text-xs text-muted capitalize">{txn.category}</p>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {txn.category && (
+                        <p className="text-xs text-muted capitalize">{txn.category}</p>
+                      )}
+                      {(txn.recurring || txn.recurring_parent_id) && (
+                        <span className="inline-flex items-center gap-0.5 text-[11px] text-faint">
+                          <Repeat size={10} strokeWidth={2} />Repeats
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className={`text-sm font-medium flex-shrink-0 tabular-nums ${txn.amount >= 0 ? 'text-accent' : 'text-ink'}`}>
                     {fmt(txn.amount)}

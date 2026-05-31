@@ -4,6 +4,7 @@ import { Plus, X } from 'lucide-react'
 import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
 import MonthNav from '../components/MonthNav'
+import SpendingInsights from '../components/SpendingInsights'
 import { getMonthRange } from '../lib/dates'
 
 function fmt(n) {
@@ -204,7 +205,11 @@ function Plan({ refreshKey }) {
 
       <MonthNav month={month} onChange={m => { setMonth(m); setBudgets([]); setTransactions([]) }} />
 
+      {/* Spending breakdown */}
+      <SpendingInsights transactions={transactions} customIcons={customIcons} />
+
       {/* Budget list */}
+      <p className="eyebrow mb-3">Budgets</p>
       {budgets.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm text-muted mb-3">No budgets for this month.</p>
