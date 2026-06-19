@@ -64,21 +64,24 @@ function Plan({ refreshKey, onRefresh }) {
 
   async function fetchData() {
     setLoading(true)
-    const user = await getCurrentUser()
-    setUserId(user.id)
-    const { start, end } = getMonthRange(month)
-    const [budgetsRes, txRes, allCats, iconMap] = await Promise.all([
-      supabase.from('budgets').select('*').eq('month', month).eq('user_id', user.id),
-      supabase.from('transactions').select('*').gte('date', start).lt('date', end).lt('amount', 0).eq('user_id', user.id).order('date', { ascending: false }),
-      fetchAllCategories(user.id),
-      fetchCategoryIconMap(user.id),
-    ])
-    if (budgetsRes.data) setBudgets(budgetsRes.data)
-    if (txRes.data) setTransactions(txRes.data)
-    setAllCategories(allCats)
-    setCustomIcons(iconMap)
-    setLoading(false)
-    fetchGoals(user.id)
+    try {
+      const user = await getCurrentUser()
+      setUserId(user.id)
+      const { start, end } = getMonthRange(month)
+      const [budgetsRes, txRes, allCats, iconMap] = await Promise.all([
+        supabase.from('budgets').select('*').eq('month', month).eq('user_id', user.id),
+        supabase.from('transactions').select('*').gte('date', start).lt('date', end).lt('amount', 0).eq('user_id', user.id).order('date', { ascending: false }),
+        fetchAllCategories(user.id),
+        fetchCategoryIconMap(user.id),
+      ])
+      if (budgetsRes.data) setBudgets(budgetsRes.data)
+      if (txRes.data) setTransactions(txRes.data)
+      setAllCategories(allCats)
+      setCustomIcons(iconMap)
+      fetchGoals(user.id)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function fetchGoals(uid) {

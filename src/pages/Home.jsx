@@ -11,6 +11,7 @@ const EMPTY = { available: 0, dailyAllowance: 0, daysLeft: 0, upcomingBills: 0, 
 
 function Home({ refreshKey }) {
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [snapshot, setSnapshot] = useState(EMPTY)
   const [recent, setRecent] = useState([])
@@ -20,39 +21,47 @@ function Home({ refreshKey }) {
 
   async function fetchData() {
     setLoading(true)
-    const user = await getCurrentUser()
-    const raw = user?.email?.split('@')[0] || ''
-    setDisplayName(raw.charAt(0).toUpperCase() + raw.slice(1))
+    setError(false)
+    try {
+      const user = await getCurrentUser()
+      const raw = user?.email?.split('@')[0] || ''
+      setDisplayName(raw.charAt(0).toUpperCase() + raw.slice(1))
 
-    const { start, end } = getMonthRange(month)
-    const prev = getMonthRange(addMonths(month, -1))
+      const { start, end } = getMonthRange(month)
+      const prev = getMonthRange(addMonths(month, -1))
 
-    const [settingsRes, txRes, templatesRes, prevTxRes, iconMap] = await Promise.all([
-      supabase.from('user_settings').select('monthly_income, rollover_enabled').eq('user_id', user.id).maybeSingle(),
-      supabase.from('transactions').select('*').gte('date', start).lt('date', end).eq('user_id', user.id).order('date', { ascending: false }).order('created_at', { ascending: false }),
-      supabase.from('transactions').select('*').eq('user_id', user.id).eq('recurring', true).is('recurring_parent_id', null),
-      supabase.from('transactions').select('amount, recurring, recurring_parent_id, goal_id').gte('date', prev.start).lt('date', prev.end).eq('user_id', user.id),
-      fetchCategoryIconMap(user.id),
-    ])
+      const [settingsRes, txRes, templatesRes, prevTxRes, iconMap] = await Promise.all([
+        supabase.from('user_settings').select('monthly_income, rollover_enabled').eq('user_id', user.id).maybeSingle(),
+        supabase.from('transactions').select('*').gte('date', start).lt('date', end).eq('user_id', user.id).order('date', { ascending: false }).order('created_at', { ascending: false }),
+        supabase.from('transactions').select('*').eq('user_id', user.id).eq('recurring', true).is('recurring_parent_id', null),
+        supabase.from('transactions').select('amount, recurring, recurring_parent_id, goal_id').gte('date', prev.start).lt('date', prev.end).eq('user_id', user.id),
+        fetchCategoryIconMap(user.id),
+      ])
 
-    const monthlyIncome = settingsRes.data?.monthly_income ?? null
-    const rolloverOn = settingsRes.data?.rollover_enabled ?? false
-    const txns = txRes.data || []
-    const templates = templatesRes.data || []
-    const prevTxns = prevTxRes.data || []
+      if (txRes.error) throw txRes.error
 
-    const upcomingBills = upcomingBillsTotal({ templates, transactions: txns, month })
+      const monthlyIncome = settingsRes.data?.monthly_income ?? null
+      const rolloverOn = settingsRes.data?.rollover_enabled ?? false
+      const txns = txRes.data || []
+      const templates = templatesRes.data || []
+      const prevTxns = prevTxRes.data || []
 
-    // Rollover: last month's leftover, but only if there was real activity then
-    // (so a brand-new user's first month isn't inflated by phantom income).
-    const rollover = rolloverOn && prevTxns.length > 0
-      ? monthLeftover({ transactions: prevTxns, monthlyIncome })
-      : 0
+      const upcomingBills = upcomingBillsTotal({ templates, transactions: txns, month })
 
-    setSnapshot(computeMonth({ transactions: txns, monthlyIncome, rollover, upcomingBills, month }))
-    setCustomIcons(iconMap)
-    setRecent(txns.slice(0, 4))
-    setLoading(false)
+      // Rollover: last month's leftover, but only if there was real activity then
+      // (so a brand-new user's first month isn't inflated by phantom income).
+      const rollover = rolloverOn && prevTxns.length > 0
+        ? monthLeftover({ transactions: prevTxns, monthlyIncome })
+        : 0
+
+      setSnapshot(computeMonth({ transactions: txns, monthlyIncome, rollover, upcomingBills, month }))
+      setCustomIcons(iconMap)
+      setRecent(txns.slice(0, 4))
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
@@ -109,8 +118,15 @@ function Home({ refreshKey }) {
         </Link>
       </div>
 
+      {error && !loading && (
+        <div className="card p-7 mb-9 text-center">
+          <p className="text-[15px] text-ink-soft mb-4">Couldn’t load your numbers. Check your connection.</p>
+          <button onClick={fetchData} className="btn-primary px-6 py-3 text-sm">Try again</button>
+        </div>
+      )}
+
       {/* Money card — the centerpiece */}
-      <div className="card p-7 mb-9">
+      <div className={`card p-7 mb-9 ${error ? 'hidden' : ''}`}>
         <p className="eyebrow mb-4">{hasPlan ? 'Safe to spend' : 'Net this month'}</p>
 
         {loading ? (
