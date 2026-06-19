@@ -5,7 +5,7 @@ import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '..
 import { CategoryIcon } from '../lib/categoryIcons'
 import MonthNav from '../components/MonthNav'
 import SpendingInsights from '../components/SpendingInsights'
-import { getMonthRange, currentMonth, todayStr, addMonths, monthLabel } from '../lib/dates'
+import { getMonthRange, currentMonth, todayStr, addMonths, monthLabel, daysInMonth } from '../lib/dates'
 
 function fmt(n) {
   return Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -28,6 +28,7 @@ function Plan({ refreshKey, onRefresh }) {
   const [userId, setUserId] = useState(null)
   const [month, setMonth] = useState(currentMonth())
   const [copying, setCopying] = useState(false)
+  const [prevSpendTotal, setPrevSpendTotal] = useState(0)
 
   const [selectedBudget, setSelectedBudget] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -68,14 +69,30 @@ function Plan({ refreshKey, onRefresh }) {
       const user = await getCurrentUser()
       setUserId(user.id)
       const { start, end } = getMonthRange(month)
-      const [budgetsRes, txRes, allCats, iconMap] = await Promise.all([
+
+      // Prior-month spending for the trend. When viewing the current month,
+      // only count last month up to the same day so a partial month isn't
+      // compared against a full one.
+      const prevMonth = addMonths(month, -1)
+      const prevR = getMonthRange(prevMonth)
+      let prevQuery = supabase.from('transactions').select('amount').eq('user_id', user.id).lt('amount', 0).gte('date', prevR.start)
+      if (month === currentMonth()) {
+        const day = Math.min(Number(todayStr().slice(8, 10)), daysInMonth(prevMonth))
+        prevQuery = prevQuery.lte('date', `${prevMonth}-${String(day).padStart(2, '0')}`)
+      } else {
+        prevQuery = prevQuery.lt('date', prevR.end)
+      }
+
+      const [budgetsRes, txRes, prevTxRes, allCats, iconMap] = await Promise.all([
         supabase.from('budgets').select('*').eq('month', month).eq('user_id', user.id),
         supabase.from('transactions').select('*').gte('date', start).lt('date', end).lt('amount', 0).eq('user_id', user.id).order('date', { ascending: false }),
+        prevQuery,
         fetchAllCategories(user.id),
         fetchCategoryIconMap(user.id),
       ])
       if (budgetsRes.data) setBudgets(budgetsRes.data)
       if (txRes.data) setTransactions(txRes.data)
+      setPrevSpendTotal((prevTxRes.data || []).reduce((s, t) => s + Math.abs(t.amount), 0))
       setAllCategories(allCats)
       setCustomIcons(iconMap)
       fetchGoals(user.id)
@@ -222,8 +239,18 @@ function Plan({ refreshKey, onRefresh }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-40">
-        <div className="w-6 h-6 border-2 border-line border-t-ink rounded-full animate-spin" />
+      <div className="px-5 pt-12 pb-8 max-w-md mx-auto">
+        <div className="h-8 w-28 bg-fill rounded-full animate-pulse mb-6" />
+        <div className="h-10 bg-fill rounded-full animate-pulse mb-8" />
+        <div className="h-4 w-24 bg-fill rounded-full animate-pulse mb-4" />
+        <div className="space-y-3.5 mb-8">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-fill rounded-xl animate-pulse flex-shrink-0" />
+              <div className="flex-1 h-3 bg-fill rounded-full animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -252,7 +279,13 @@ function Plan({ refreshKey, onRefresh }) {
       <MonthNav month={month} onChange={m => { setMonth(m); setBudgets([]); setTransactions([]) }} />
 
       {/* Spending breakdown */}
-      <SpendingInsights transactions={transactions} customIcons={customIcons} />
+      <SpendingInsights
+        transactions={transactions}
+        customIcons={customIcons}
+        prevTotal={prevSpendTotal}
+        prevLabel={monthLabel(addMonths(month, -1))}
+        paceAdjusted={month === currentMonth()}
+      />
 
       {/* Budget list */}
       <p className="eyebrow mb-3">Budgets</p>
@@ -369,7 +402,7 @@ function Plan({ refreshKey, onRefresh }) {
       {/* Budget detail sheet */}
       {selectedBudget && (
         <>
-          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }} />
+          <div className="fixed inset-0 bg-scrim scrim z-40" onClick={() => { setSelectedBudget(null); setEditingLimit(false); setLimitError('') }} />
           <div className="sheet fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] flex flex-col">
             <div className="flex-shrink-0 px-6 pt-5 pb-5 border-b border-line">
               <div className="flex items-center justify-between mb-5">
@@ -466,7 +499,7 @@ function Plan({ refreshKey, onRefresh }) {
       {/* Add budget sheet */}
       {showAddBudget && (
         <>
-          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setShowAddBudget(false)} />
+          <div className="fixed inset-0 bg-scrim scrim z-40" onClick={() => setShowAddBudget(false)} />
           <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-7">
               <p className="text-base font-semibold">New budget</p>
@@ -521,7 +554,7 @@ function Plan({ refreshKey, onRefresh }) {
       {/* Add goal sheet */}
       {showAddGoal && (
         <>
-          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setShowAddGoal(false)} />
+          <div className="fixed inset-0 bg-scrim scrim z-40" onClick={() => setShowAddGoal(false)} />
           <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-7">
               <p className="text-base font-semibold">New goal</p>
@@ -564,7 +597,7 @@ function Plan({ refreshKey, onRefresh }) {
       {/* Goal detail sheet */}
       {selectedGoal && (
         <>
-          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setSelectedGoal(null)} />
+          <div className="fixed inset-0 bg-scrim scrim z-40" onClick={() => setSelectedGoal(null)} />
           <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-5">
               <p className="text-base font-semibold">{selectedGoal.title}</p>

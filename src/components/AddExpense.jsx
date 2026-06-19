@@ -3,6 +3,7 @@ import { supabase, getCurrentUser } from '../lib/supabase'
 import { X, Delete, StickyNote, Calendar, Repeat } from 'lucide-react'
 import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
 import { todayStr, toLocalDateStr } from '../lib/dates'
+import { haptic } from '../lib/haptics'
 
 const REPEAT_OPTIONS = [
   { label: 'Once', value: false },
@@ -66,6 +67,7 @@ function AddExpense({ onClose, onSave }) {
 
   function press(key) {
     setError('')
+    haptic(6)
     setAmount(a => {
       if (key === 'back') return a.slice(0, -1)
       if (key === '.') {
@@ -129,7 +131,7 @@ function AddExpense({ onClose, onSave }) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-ink/30 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-scrim scrim z-40" onClick={onClose} />
       <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-5 pt-4 pb-8 max-w-md mx-auto">
 
         {/* Type segmented control */}

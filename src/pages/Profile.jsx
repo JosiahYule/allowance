@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart, Repeat, ArrowRightLeft } from 'lucide-react'
+import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart, Repeat, ArrowRightLeft, Moon } from 'lucide-react'
+import { getTheme, setTheme as persistTheme, THEMES } from '../lib/theme'
 
 function Row({ icon: Icon, label, value, onPress }) {
   return (
@@ -54,6 +55,7 @@ function Profile() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [rolloverEnabled, setRolloverEnabled] = useState(true)
   const [savingRollover, setSavingRollover] = useState(false)
+  const [theme, setTheme] = useState(getTheme())
 
   useEffect(() => {
     getCurrentUser().then(async (user) => {
@@ -171,6 +173,28 @@ function Profile() {
         <Row icon={Repeat} label="Recurring" onPress={() => navigate('/recurring')} />
         <div className="h-px bg-line mx-3" />
         <Row icon={Tag} label="Categories" onPress={() => navigate('/categories')} />
+      </div>
+
+      {/* Appearance */}
+      <p className="eyebrow px-3 mb-2">Appearance</p>
+      <div className="card p-2.5 mb-5">
+        <div className="flex items-center gap-3.5 py-2 px-1">
+          <div className="w-9 h-9 rounded-2xl bg-fill flex items-center justify-center flex-shrink-0">
+            <Moon size={16} className="text-ink-soft" />
+          </div>
+          <p className="text-[15px] text-ink flex-1">Theme</p>
+          <div className="flex bg-fill rounded-full p-0.5">
+            {THEMES.map(t => (
+              <button
+                key={t}
+                onClick={() => { persistTheme(t); setTheme(t) }}
+                className={`text-[12px] capitalize px-3 py-1.5 rounded-full transition-colors ${theme === t ? 'bg-surface text-ink shadow-sm' : 'text-muted'}`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Account */}

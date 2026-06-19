@@ -193,7 +193,7 @@ function Recurring() {
       {/* Edit sheet */}
       {selected && (
         <>
-          <div className="fixed inset-0 bg-ink/30 z-40" onClick={closeSheet} />
+          <div className="fixed inset-0 bg-scrim scrim z-40" onClick={closeSheet} />
           <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-7">
               <p className="text-base font-semibold text-ink">Edit recurring</p>

@@ -49,9 +49,30 @@
   --color-accent:       #2F7D5B;  /* money / positive / income */
   --color-accent-soft:  #E7F0EA;  /* positive backgrounds */
   --color-danger:       #AF4B3C;  /* over budget / negative */
+  --color-scrim:        rgba(26, 25, 23, 0.30);   /* sheet/dialog backdrop */
+  --color-nav:          rgba(251, 250, 247, 0.85); /* translucent bottom nav */
 
   --font-sans:    'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+}
+
+/* Dark theme — applied via `html.dark` (set from the saved preference, or the
+   system setting in "system" mode). Only overrides the palette, so the light
+   design is untouched. Warm dark to match the editorial light theme. */
+.dark {
+  --color-paper:        #1A1814;
+  --color-surface:      #232019;
+  --color-ink:          #F4EFE6;
+  --color-ink-soft:     #CDC6B8;
+  --color-muted:        #A39C8D;
+  --color-faint:        #6E685C;
+  --color-line:         #322E27;
+  --color-fill:         #2B2720;
+  --color-accent:       #74C295;
+  --color-accent-soft:  #1F2A23;
+  --color-danger:       #E08B6F;
+  --color-scrim:        rgba(0, 0, 0, 0.55);
+  --color-nav:          rgba(26, 24, 20, 0.85);
 }
 
 * {
@@ -86,6 +107,19 @@ html, body {
   background-color: var(--color-surface);
   border-radius: 1.75rem 1.75rem 0 0;
   box-shadow: 0 -12px 40px -16px rgba(26, 25, 23, 0.22);
+  animation: sheet-up 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Backdrop fade for sheets/dialogs */
+.scrim { animation: fade-in 0.2s ease-out; }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Small tracked uppercase label */
