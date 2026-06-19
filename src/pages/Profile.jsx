@@ -65,7 +65,7 @@ function Profile() {
       if (user) {
         const { data } = await supabase
           .from('user_settings')
-          .select('monthly_income, rollover_enabled')
+          .select('*')
           .eq('user_id', user.id)
           .maybeSingle()
         setMonthlyIncome(data?.monthly_income ?? null)

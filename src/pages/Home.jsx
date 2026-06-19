@@ -31,10 +31,10 @@ function Home({ refreshKey }) {
       const prev = getMonthRange(addMonths(month, -1))
 
       const [settingsRes, txRes, templatesRes, prevTxRes, iconMap] = await Promise.all([
-        supabase.from('user_settings').select('monthly_income, rollover_enabled').eq('user_id', user.id).maybeSingle(),
+        supabase.from('user_settings').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('transactions').select('*').gte('date', start).lt('date', end).eq('user_id', user.id).order('date', { ascending: false }).order('created_at', { ascending: false }),
         supabase.from('transactions').select('*').eq('user_id', user.id).eq('recurring', true).is('recurring_parent_id', null),
-        supabase.from('transactions').select('amount, recurring, recurring_parent_id, goal_id').gte('date', prev.start).lt('date', prev.end).eq('user_id', user.id),
+        supabase.from('transactions').select('*').gte('date', prev.start).lt('date', prev.end).eq('user_id', user.id),
         fetchCategoryIconMap(user.id),
       ])
 
