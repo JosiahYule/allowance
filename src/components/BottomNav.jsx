@@ -13,11 +13,10 @@ function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 border-t border-line flex justify-around items-start pt-2.5"
+      className="fixed bottom-0 left-0 right-0 border-t border-line flex justify-around items-start pt-2.5 bg-nav"
       style={{
         height: 'calc(4.25rem + env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        backgroundColor: 'rgba(251, 250, 247, 0.85)',
         backdropFilter: 'saturate(180%) blur(20px)',
         WebkitBackdropFilter: 'saturate(180%) blur(20px)',
       }}

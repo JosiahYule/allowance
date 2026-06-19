@@ -1,16 +1,16 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { Search, X, Repeat } from 'lucide-react'
 import MonthNav from '../components/MonthNav'
 import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
-import { getMonthRange } from '../lib/dates'
+import { getMonthRange, currentMonth } from '../lib/dates'
 
 function Transactions({ refreshKey, onRefresh }) {
   const [all, setAll] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [month, setMonth] = useState(currentMonth())
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [customIcons, setCustomIcons] = useState({})
 
@@ -22,6 +22,8 @@ function Transactions({ refreshKey, onRefresh }) {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState('')
+  const [undo, setUndo] = useState(null) // { row } of the just-deleted transaction
+  const undoTimer = useRef(null)
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true)
@@ -135,7 +137,7 @@ function Transactions({ refreshKey, onRefresh }) {
     }
   }
 
-  async function confirmDelete(id) {
+  async function confirmDelete(txn) {
     setActionLoading(true)
     setActionError('')
     try {
@@ -143,14 +145,18 @@ function Transactions({ refreshKey, onRefresh }) {
       const { error, data } = await supabase
         .from('transactions')
         .delete()
-        .eq('id', id)
+        .eq('id', txn.id)
         .eq('user_id', user.id)
         .select()
       if (!error && data?.length > 0) {
         setExpandedId(null)
         setDeleteConfirmId(null)
-        await fetchTransactions()
+        setAll(prev => prev.filter(t => t.id !== txn.id))
         onRefresh?.()
+        // Offer a brief window to undo. The row is restored by re-inserting it.
+        clearTimeout(undoTimer.current)
+        setUndo({ row: txn })
+        undoTimer.current = setTimeout(() => setUndo(null), 5000)
       } else {
         setActionError('Could not delete. Try again.')
       }
@@ -159,10 +165,53 @@ function Transactions({ refreshKey, onRefresh }) {
     }
   }
 
+  async function undoDelete() {
+    if (!undo) return
+    const t = undo.row
+    setUndo(null)
+    clearTimeout(undoTimer.current)
+    const user = await getCurrentUser()
+    const payload = {
+      user_id: user.id,
+      description: t.description,
+      amount: t.amount,
+      category: t.category,
+      date: t.date,
+      recurring: t.recurring ?? false,
+      recurring_interval: t.recurring_interval ?? null,
+      recurring_parent_id: t.recurring_parent_id ?? null,
+      goal_id: t.goal_id ?? null,
+    }
+    const { error } = await supabase.from('transactions').insert(payload)
+    if (error) {
+      // Older schema without the newer columns — retry with the essentials.
+      await supabase.from('transactions').insert({
+        user_id: user.id, description: t.description, amount: t.amount, category: t.category, date: t.date,
+      })
+    }
+    await fetchTransactions()
+    onRefresh?.()
+  }
+
+  useEffect(() => () => clearTimeout(undoTimer.current), [])
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-40">
-        <div className="w-6 h-6 border-2 border-line border-t-ink rounded-full animate-spin" />
+      <div className="px-5 pt-12 pb-8 max-w-md mx-auto">
+        <div className="h-7 w-44 bg-fill rounded-full animate-pulse mb-6" />
+        <div className="h-10 bg-fill rounded-full animate-pulse mb-5" />
+        <div className="space-y-1 mt-8">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="flex items-center gap-3 py-3">
+              <div className="w-9 h-9 bg-fill rounded-2xl animate-pulse flex-shrink-0" />
+              <div className="flex-1">
+                <div className="h-3.5 bg-fill rounded-full w-32 mb-2 animate-pulse" />
+                <div className="h-3 bg-fill rounded-full w-20 animate-pulse" />
+              </div>
+              <div className="h-4 w-14 bg-fill rounded-full animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -233,6 +282,7 @@ function Transactions({ refreshKey, onRefresh }) {
                     <CategoryIcon
                       category={txn.category}
                       isIncome={txn.amount >= 0}
+                      isSavings={txn.goal_id != null}
                       size={15}
                       className="text-ink-soft"
                       customIcons={customIcons}
@@ -279,7 +329,7 @@ function Transactions({ refreshKey, onRefresh }) {
                   <>
                     <div className="flex border-b border-line">
                       <button
-                        onClick={() => confirmDelete(txn.id)}
+                        onClick={() => confirmDelete(txn)}
                         disabled={actionLoading}
                         className="flex-1 py-3 text-xs font-medium text-ink border-r border-line active:bg-fill transition-colors disabled:opacity-50"
                       >
@@ -382,6 +432,18 @@ function Transactions({ refreshKey, onRefresh }) {
             ))}
           </div>
         ))
+      )}
+
+      {undo && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 bg-ink text-paper text-[13px] font-medium pl-5 pr-2 py-2 rounded-full"
+          style={{ bottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))', boxShadow: '0 10px 30px -8px rgba(26,25,23,0.5)' }}
+        >
+          Transaction deleted
+          <button onClick={undoDelete} className="px-3 py-1.5 rounded-full bg-paper/15 active:bg-paper/25 transition-colors">
+            Undo
+          </button>
+        </div>
       )}
     </div>
   )

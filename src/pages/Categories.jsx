@@ -131,7 +131,7 @@ function Categories() {
 
       {showAdd && (
         <>
-          <div className="fixed inset-0 bg-ink/30 z-40" onClick={() => setShowAdd(false)} />
+          <div className="fixed inset-0 bg-scrim scrim z-40" onClick={() => setShowAdd(false)} />
           <div className="sheet fixed bottom-0 left-0 right-0 z-50 px-6 pt-6 pb-9">
             <div className="flex items-center justify-between mb-7">
               <p className="text-lg font-semibold text-ink">New category</p>
