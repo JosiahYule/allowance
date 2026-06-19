@@ -42,7 +42,7 @@
   --color-surface:      #FFFFFF;  /* cards, sheets */
   --color-ink:          #1A1917;  /* primary text — warm near-black */
   --color-ink-soft:     #57534E;  /* secondary text */
-  --color-muted:        #8C877D;  /* labels, captions */
+  --color-muted:        #6E695F;  /* labels, captions — AA contrast on paper */
   --color-faint:        #B8B2A7;  /* placeholders, disabled */
   --color-line:         #EDE8E0;  /* hairlines, borders */
   --color-fill:         #F3EFE8;  /* chips, icon tiles, tracks */
@@ -112,3 +112,27 @@ html, body {
 /* Safe area utilities for PWA on iOS */
 .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Visible keyboard-focus ring. Inputs across the app use `outline-none`; this
+   restores an accessible focus indicator without bringing back the mouse-click
+   outline that the design intentionally drops. */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
