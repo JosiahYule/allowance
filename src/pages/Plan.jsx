@@ -5,7 +5,7 @@ import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '..
 import { CategoryIcon } from '../lib/categoryIcons'
 import MonthNav from '../components/MonthNav'
 import SpendingInsights from '../components/SpendingInsights'
-import { getMonthRange } from '../lib/dates'
+import { getMonthRange, currentMonth, todayStr, addMonths, monthLabel } from '../lib/dates'
 
 function fmt(n) {
   return Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -20,13 +20,14 @@ function fmtDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
 }
 
-function Plan({ refreshKey }) {
+function Plan({ refreshKey, onRefresh }) {
   const [budgets, setBudgets] = useState([])
   const [transactions, setTransactions] = useState([])
   const [allCategories, setAllCategories] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState(null)
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [month, setMonth] = useState(currentMonth())
+  const [copying, setCopying] = useState(false)
 
   const [selectedBudget, setSelectedBudget] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -58,6 +59,7 @@ function Plan({ refreshKey }) {
   const [fundsSaving, setFundsSaving] = useState(false)
   const [deleteGoalConfirm, setDeleteGoalConfirm] = useState(false)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchData() }, [refreshKey, month])
 
   async function fetchData() {
@@ -161,9 +163,50 @@ function Plan({ refreshKey }) {
     if (!addFundsAmount || isNaN(parsed) || parsed <= 0) return
     setFundsSaving(true)
     const newAmount = Math.min((selectedGoal.current_amount || 0) + parsed, selectedGoal.target_amount)
+    const contributed = newAmount - (selectedGoal.current_amount || 0) // clamped to the target
+
+    // Record the contribution as a real outflow so saving reduces what's safe to
+    // spend. If the goal_id column isn't migrated yet this insert no-ops and the
+    // goal still updates — graceful degradation.
+    if (contributed > 0) {
+      await supabase.from('transactions').insert({
+        user_id: userId,
+        description: `Savings · ${selectedGoal.title}`,
+        amount: -contributed,
+        category: 'savings',
+        date: todayStr(),
+        goal_id: selectedGoal.id,
+      })
+    }
+
     const { error } = await supabase.from('goals').update({ current_amount: newAmount }).eq('id', selectedGoal.id).eq('user_id', userId)
-    if (!error) { setAddFundsAmount(''); setSelectedGoal(null); fetchGoals(userId) }
+    if (!error) {
+      setAddFundsAmount('')
+      setSelectedGoal(null)
+      fetchGoals(userId)
+      fetchData()
+      onRefresh?.()
+    }
     setFundsSaving(false)
+  }
+
+  // Carry a prior month's budget limits forward so budgets stop vanishing each
+  // month. Copies the most recent month that has any budgets into this one.
+  async function handleCopyBudgets() {
+    setCopying(true)
+    let cursor = month
+    for (let i = 0; i < 12; i++) {
+      cursor = addMonths(cursor, -1)
+      const { data } = await supabase.from('budgets').select('category, monthly_limit').eq('user_id', userId).eq('month', cursor)
+      if (data?.length) {
+        await supabase.from('budgets').insert(
+          data.map(b => ({ user_id: userId, category: b.category, monthly_limit: b.monthly_limit, month }))
+        )
+        break
+      }
+    }
+    await fetchData()
+    setCopying(false)
   }
 
   async function handleDeleteGoal() {
@@ -212,13 +255,22 @@ function Plan({ refreshKey }) {
       <p className="eyebrow mb-3">Budgets</p>
       {budgets.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-sm text-muted mb-3">No budgets for this month.</p>
-          <button
-            onClick={() => { setNewCategory(''); setNewLimit(''); setAddError(''); setShowAddBudget(true) }}
-            className="text-sm font-medium text-ink underline underline-offset-2"
-          >
-            Add your first budget
-          </button>
+          <p className="text-sm text-muted mb-4">No budgets for {monthLabel(month)}.</p>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={handleCopyBudgets}
+              disabled={copying}
+              className="text-sm font-medium px-5 py-2.5 rounded-full bg-fill text-ink active:scale-[0.98] transition-transform disabled:opacity-50"
+            >
+              {copying ? 'Copying…' : 'Carry forward last month’s budgets'}
+            </button>
+            <button
+              onClick={() => { setNewCategory(''); setNewLimit(''); setAddError(''); setShowAddBudget(true) }}
+              className="text-sm font-medium text-ink underline underline-offset-2"
+            >
+              Add one from scratch
+            </button>
+          </div>
         </div>
       ) : (
         <div className="mb-8">

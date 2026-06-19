@@ -4,13 +4,13 @@ import { Search, X, Repeat } from 'lucide-react'
 import MonthNav from '../components/MonthNav'
 import { DEFAULT_CATEGORIES, fetchAllCategories, fetchCategoryIconMap } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
-import { getMonthRange } from '../lib/dates'
+import { getMonthRange, currentMonth } from '../lib/dates'
 
 function Transactions({ refreshKey, onRefresh }) {
   const [all, setAll] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
+  const [month, setMonth] = useState(currentMonth())
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [customIcons, setCustomIcons] = useState({})
 
@@ -233,6 +233,7 @@ function Transactions({ refreshKey, onRefresh }) {
                     <CategoryIcon
                       category={txn.category}
                       isIncome={txn.amount >= 0}
+                      isSavings={txn.goal_id != null}
                       size={15}
                       className="text-ink-soft"
                       customIcons={customIcons}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { ArrowLeft, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
+import { todayStr, toLocalDateStr } from '../lib/dates'
 
 // Steps: 1=type, 2=amount, 3=category (expenses only), 4=description, 5=date, 6=repeat
 function AddExpense({ onClose, onSave }) {
@@ -10,7 +11,7 @@ function AddExpense({ onClose, onSave }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(todayStr())
   const [recurring, setRecurring] = useState(false)
   const [recurringInterval, setRecurringInterval] = useState('monthly')
   const [saving, setSaving] = useState(false)
@@ -56,13 +57,12 @@ function AddExpense({ onClose, onSave }) {
   function shiftDate(days) {
     const d = new Date(date + 'T00:00:00')
     d.setDate(d.getDate() + days)
-    const newDate = d.toISOString().split('T')[0]
-    const today = new Date().toISOString().split('T')[0]
-    if (newDate > today) return
+    const newDate = toLocalDateStr(d)
+    if (newDate > todayStr()) return
     setDate(newDate)
   }
 
-  const isToday = date === new Date().toISOString().split('T')[0]
+  const isToday = date === todayStr()
 
   const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-CA', {
     weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',

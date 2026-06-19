@@ -3,18 +3,20 @@ import { Link } from 'react-router-dom'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { CategoryIcon } from '../lib/categoryIcons'
 import { fetchCategoryIconMap } from '../lib/categories'
-import { getMonthRange } from '../lib/dates'
+import { getMonthRange, currentMonth, addMonths } from '../lib/dates'
+import { computeMonth, monthLeftover } from '../lib/finance'
+import { upcomingBillsTotal } from '../lib/recurring'
+
+const EMPTY = { available: 0, dailyAllowance: 0, daysLeft: 0, upcomingBills: 0, hasPlan: false }
 
 function Home({ refreshKey }) {
   const [loading, setLoading] = useState(true)
   const [displayName, setDisplayName] = useState('')
-  const [totalSpent, setTotalSpent] = useState(0)
-  const [totalEarned, setTotalEarned] = useState(0)
-  const [totalPlanned, setTotalPlanned] = useState(0)
+  const [snapshot, setSnapshot] = useState(EMPTY)
   const [recent, setRecent] = useState([])
   const [customIcons, setCustomIcons] = useState({})
 
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  const month = currentMonth()
 
   async function fetchData() {
     setLoading(true)
@@ -22,26 +24,33 @@ function Home({ refreshKey }) {
     const raw = user?.email?.split('@')[0] || ''
     setDisplayName(raw.charAt(0).toUpperCase() + raw.slice(1))
 
-    const { start, end } = getMonthRange(currentMonth)
+    const { start, end } = getMonthRange(month)
+    const prev = getMonthRange(addMonths(month, -1))
 
-    const [budgetsRes, txRes, settingsRes, iconMap] = await Promise.all([
-      supabase.from('budgets').select('monthly_limit').eq('month', currentMonth).eq('user_id', user.id),
+    const [settingsRes, txRes, templatesRes, prevTxRes, iconMap] = await Promise.all([
+      supabase.from('user_settings').select('monthly_income, rollover_enabled').eq('user_id', user.id).maybeSingle(),
       supabase.from('transactions').select('*').gte('date', start).lt('date', end).eq('user_id', user.id).order('date', { ascending: false }).order('created_at', { ascending: false }),
-      supabase.from('user_settings').select('monthly_income').eq('user_id', user.id).maybeSingle(),
+      supabase.from('transactions').select('*').eq('user_id', user.id).eq('recurring', true).is('recurring_parent_id', null),
+      supabase.from('transactions').select('amount, recurring, recurring_parent_id, goal_id').gte('date', prev.start).lt('date', prev.end).eq('user_id', user.id),
       fetchCategoryIconMap(user.id),
     ])
 
-    const income = settingsRes.data?.monthly_income ?? null
-    setCustomIcons(iconMap)
-
+    const monthlyIncome = settingsRes.data?.monthly_income ?? null
+    const rolloverOn = settingsRes.data?.rollover_enabled ?? false
     const txns = txRes.data || []
-    const spent = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
-    const earned = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)
-    const budgetTotal = (budgetsRes.data || []).reduce((s, b) => s + b.monthly_limit, 0)
+    const templates = templatesRes.data || []
+    const prevTxns = prevTxRes.data || []
 
-    setTotalSpent(spent)
-    setTotalEarned(earned)
-    setTotalPlanned(income ?? budgetTotal)
+    const upcomingBills = upcomingBillsTotal({ templates, transactions: txns, month })
+
+    // Rollover: last month's leftover, but only if there was real activity then
+    // (so a brand-new user's first month isn't inflated by phantom income).
+    const rollover = rolloverOn && prevTxns.length > 0
+      ? monthLeftover({ transactions: prevTxns, monthlyIncome })
+      : 0
+
+    setSnapshot(computeMonth({ transactions: txns, monthlyIncome, rollover, upcomingBills, month }))
+    setCustomIcons(iconMap)
     setRecent(txns.slice(0, 4))
     setLoading(false)
   }
@@ -49,11 +58,8 @@ function Home({ refreshKey }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/set-state-in-effect
   useEffect(() => { fetchData() }, [refreshKey])
 
-  const hasPlan = totalPlanned > 0
-  const available = totalPlanned - totalSpent
-  const net = totalEarned - totalSpent
-  const heroValue = hasPlan ? available : net
-  const heroNegative = heroValue < 0
+  const { available, dailyAllowance, daysLeft, upcomingBills, hasPlan } = snapshot
+  const heroNegative = available < 0
 
   const getGreeting = () => {
     const h = new Date().getHours()
@@ -63,9 +69,11 @@ function Home({ refreshKey }) {
   }
 
   const fmtBig = (n) => {
-    const s = Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    const s = Math.abs(Math.round(n)).toLocaleString('en-CA')
     return (n < 0 ? '−' : '') + '$' + s
   }
+
+  const fmtMoney = (n) => '$' + Math.abs(Math.round(n)).toLocaleString('en-CA')
 
   const fmtTxn = (amount) => {
     const s = Math.abs(amount).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -90,10 +98,11 @@ function Home({ refreshKey }) {
       <div className="flex justify-between items-center mb-6">
         <div>
           <p className="text-[13px] text-muted mb-0.5">{getGreeting()}</p>
-          <p className="text-xl font-semibold text-ink tracking-tight">{displayName || ' '}</p>
+          <p className="text-xl font-semibold text-ink tracking-tight">{displayName || ' '}</p>
         </div>
         <Link
           to="/profile"
+          aria-label="Profile"
           className="w-10 h-10 rounded-full bg-fill flex items-center justify-center active:scale-95 transition-transform"
         >
           <span className="text-sm font-semibold text-ink-soft">{displayName.charAt(0) || '?'}</span>
@@ -102,19 +111,40 @@ function Home({ refreshKey }) {
 
       {/* Money card — the centerpiece */}
       <div className="card p-7 mb-9">
-        <p className="eyebrow mb-4">{hasPlan ? 'Available to spend' : 'Net this month'}</p>
+        <p className="eyebrow mb-4">{hasPlan ? 'Safe to spend' : 'Net this month'}</p>
 
         {loading ? (
           <div className="h-[76px] w-52 bg-fill rounded-2xl animate-pulse" />
         ) : (
-          <p className={`font-display font-light text-[80px] leading-[0.9] tracking-tight tabular-nums ${heroNegative ? 'text-danger' : 'text-ink'}`}>
-            {fmtBig(heroValue)}
+          <p
+            aria-live="polite"
+            className={`font-display font-light text-[72px] leading-[0.9] tracking-tight tabular-nums break-words ${heroNegative ? 'text-danger' : 'text-ink'}`}
+          >
+            {fmtBig(available)}
           </p>
+        )}
+
+        {!loading && hasPlan && (
+          <div className="mt-5 space-y-1">
+            {available >= 0 ? (
+              daysLeft > 0 && (
+                <p className="text-[14px] text-ink-soft">
+                  About <span className="font-semibold text-ink">{fmtMoney(dailyAllowance)}</span> a day
+                  {' '}for the next {daysLeft} {daysLeft === 1 ? 'day' : 'days'}.
+                </p>
+              )
+            ) : (
+              <p className="text-[14px] text-danger">{fmtMoney(available)} over your plan this month.</p>
+            )}
+            {upcomingBills > 0 && (
+              <p className="text-[13px] text-muted">After {fmtMoney(upcomingBills)} in bills still due this month.</p>
+            )}
+          </div>
         )}
 
         {!hasPlan && !loading && (
           <Link to="/profile" className="inline-flex items-center text-[13px] text-accent font-medium mt-5">
-            Set a monthly income to track what's available →
+            Set a monthly income to track what's safe to spend →
           </Link>
         )}
       </div>
@@ -147,6 +177,7 @@ function Home({ refreshKey }) {
                 <CategoryIcon
                   category={txn.category}
                   isIncome={txn.amount >= 0}
+                  isSavings={txn.goal_id != null}
                   size={16}
                   className="text-ink-soft"
                   customIcons={customIcons}

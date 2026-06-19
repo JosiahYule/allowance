@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { DEFAULT_CATEGORIES, fetchAllCategories } from '../lib/categories'
 import { CategoryIcon } from '../lib/categoryIcons'
+import { currentMonth, monthLabel } from '../lib/dates'
 
 function Budgets() {
   const navigate = useNavigate()
@@ -22,9 +23,9 @@ function Budgets() {
       const user = await getCurrentUser()
       userIdRef.current = user.id
 
-      const currentMonth = new Date().toISOString().slice(0, 7)
+      const thisMonth = currentMonth()
       const [{ data: budgetData }, allCats] = await Promise.all([
-        supabase.from('budgets').select('*').eq('month', currentMonth).eq('user_id', user.id),
+        supabase.from('budgets').select('*').eq('month', thisMonth).eq('user_id', user.id),
         fetchAllCategories(user.id),
       ])
 
@@ -51,7 +52,7 @@ function Budgets() {
     setSaving(true)
     setSaveError('')
 
-    const currentMonth = new Date().toISOString().slice(0, 7)
+    const thisMonth = currentMonth()
     const existing = budgets.find(b => b.category === category)
     const { error } = existing
       ? await supabase.from('budgets').update({ monthly_limit: parsed }).eq('id', existing.id)
@@ -59,7 +60,7 @@ function Budgets() {
           user_id: userIdRef.current,
           category,
           monthly_limit: parsed,
-          month: currentMonth,
+          month: thisMonth,
         })
 
     if (error) {
@@ -70,7 +71,7 @@ function Budgets() {
       const { data } = await supabase
         .from('budgets')
         .select('*')
-        .eq('month', currentMonth)
+        .eq('month', thisMonth)
         .eq('user_id', userIdRef.current)
       if (data) setBudgets(data)
     }
@@ -98,7 +99,7 @@ function Budgets() {
     )
   }
 
-  const currentMonthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+  const currentMonthLabel = monthLabel(currentMonth())
 
   return (
     <div className="px-5 pt-12 pb-8 max-w-md mx-auto">

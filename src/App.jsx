@@ -166,7 +166,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home refreshKey={refreshKey} />} />
             <Route path="/transactions" element={<Transactions refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />} />
-            <Route path="/plan" element={<Plan refreshKey={refreshKey} />} />
+            <Route path="/plan" element={<Plan refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/budgets" element={<Budgets />} />
             <Route path="/categories" element={<Categories />} />

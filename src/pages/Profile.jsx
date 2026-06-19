@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, getCurrentUser } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart, Repeat } from 'lucide-react'
+import { ChevronRight, X, Check, Wallet, Tag, LogOut, PieChart, Repeat, ArrowRightLeft } from 'lucide-react'
 
 function Row({ icon: Icon, label, value, onPress }) {
   return (
@@ -19,6 +19,30 @@ function Row({ icon: Icon, label, value, onPress }) {
   )
 }
 
+function ToggleRow({ icon: Icon, label, hint, on, onToggle, busy }) {
+  return (
+    <div className="w-full flex items-center gap-3.5 py-3.5">
+      <div className="w-9 h-9 rounded-2xl bg-fill flex items-center justify-center flex-shrink-0">
+        <Icon size={16} className="text-ink-soft" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] text-ink">{label}</p>
+        {hint && <p className="text-[12px] text-muted mt-0.5">{hint}</p>}
+      </div>
+      <button
+        role="switch"
+        aria-checked={on}
+        aria-label={label}
+        disabled={busy}
+        onClick={onToggle}
+        className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors disabled:opacity-50 ${on ? 'bg-ink' : 'bg-line'}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface transition-transform ${on ? 'translate-x-5' : ''}`} />
+      </button>
+    </div>
+  )
+}
+
 function Profile() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -28,6 +52,8 @@ function Profile() {
   const [incomeInput, setIncomeInput] = useState('')
   const [savingIncome, setSavingIncome] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [rolloverEnabled, setRolloverEnabled] = useState(true)
+  const [savingRollover, setSavingRollover] = useState(false)
 
   useEffect(() => {
     getCurrentUser().then(async (user) => {
@@ -37,13 +63,28 @@ function Profile() {
       if (user) {
         const { data } = await supabase
           .from('user_settings')
-          .select('monthly_income')
+          .select('monthly_income, rollover_enabled')
           .eq('user_id', user.id)
           .maybeSingle()
         setMonthlyIncome(data?.monthly_income ?? null)
+        setRolloverEnabled(data?.rollover_enabled ?? true)
       }
     })
   }, [])
+
+  async function toggleRollover() {
+    const next = !rolloverEnabled
+    setRolloverEnabled(next)
+    setSavingRollover(true)
+    const user = await getCurrentUser()
+    const { error } = await supabase.from('user_settings').upsert({
+      user_id: user.id,
+      rollover_enabled: next,
+      updated_at: new Date().toISOString(),
+    })
+    if (error) setRolloverEnabled(!next) // revert on failure (e.g. column not migrated)
+    setSavingRollover(false)
+  }
 
   async function saveIncome() {
     const parsed = parseFloat(incomeInput)
@@ -115,6 +156,15 @@ function Profile() {
             onPress={() => { setIncomeInput(monthlyIncome != null ? String(monthlyIncome) : ''); setEditingIncome(true) }}
           />
         )}
+        <div className="h-px bg-line mx-3" />
+        <ToggleRow
+          icon={ArrowRightLeft}
+          label="Roll over leftover"
+          hint="Carry last month’s remainder into this month"
+          on={rolloverEnabled}
+          onToggle={toggleRollover}
+          busy={savingRollover}
+        />
         <div className="h-px bg-line mx-3" />
         <Row icon={PieChart} label="Budgets" onPress={() => navigate('/budgets')} />
         <div className="h-px bg-line mx-3" />

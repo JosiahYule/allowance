@@ -1,4 +1,4 @@
-import { ShoppingCart, Utensils, Car, ShoppingBag, Heart, Tv, Tag, Receipt, DollarSign } from 'lucide-react'
+import { ShoppingCart, Utensils, Car, ShoppingBag, Heart, Tv, Tag, Receipt, DollarSign, PiggyBank } from 'lucide-react'
 
 const ICONS = {
   groceries:     ShoppingCart,
@@ -8,6 +8,7 @@ const ICONS = {
   health:        Heart,
   entertainment: Tv,
   bills:         Receipt,
+  savings:       PiggyBank,
 }
 
 function getCategoryIcon(category) {
@@ -15,7 +16,8 @@ function getCategoryIcon(category) {
 }
 
 /* eslint-disable react-hooks/static-components */
-export function CategoryIcon({ category, isIncome, size = 15, className = '', customIcons = {} }) {
+export function CategoryIcon({ category, isIncome, isSavings, size = 15, className = '', customIcons = {} }) {
+  if (isSavings) return <PiggyBank size={size} className={className} />
   if (isIncome) return <DollarSign size={size} className={className} />
   const emoji = customIcons[category?.toLowerCase()]
   if (emoji) {
