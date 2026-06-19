@@ -113,6 +113,10 @@ html, body {
 .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
+/* Hide the scrollbar on horizontal chip strips while keeping them scrollable. */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Visible keyboard-focus ring. Inputs across the app use `outline-none`; this
    restores an accessible focus indicator without bringing back the mouse-click
    outline that the design intentionally drops. */

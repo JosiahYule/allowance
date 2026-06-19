@@ -166,7 +166,7 @@ function Profile() {
           busy={savingRollover}
         />
         <div className="h-px bg-line mx-3" />
-        <Row icon={PieChart} label="Budgets" onPress={() => navigate('/budgets')} />
+        <Row icon={PieChart} label="Budgets" onPress={() => navigate('/plan')} />
         <div className="h-px bg-line mx-3" />
         <Row icon={Repeat} label="Recurring" onPress={() => navigate('/recurring')} />
         <div className="h-px bg-line mx-3" />

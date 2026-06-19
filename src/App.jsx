@@ -14,7 +14,6 @@ import { recurringDueDates } from './lib/recurring'
 const Transactions = lazy(() => import('./pages/Transactions'))
 const Plan = lazy(() => import('./pages/Plan'))
 const Profile = lazy(() => import('./pages/Profile'))
-const Budgets = lazy(() => import('./pages/Budgets'))
 const Categories = lazy(() => import('./pages/Categories'))
 const Recurring = lazy(() => import('./pages/Recurring'))
 const Onboarding = lazy(() => import('./pages/Onboarding'))
@@ -168,7 +167,6 @@ function App() {
             <Route path="/transactions" element={<Transactions refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />} />
             <Route path="/plan" element={<Plan refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/budgets" element={<Budgets />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/recurring" element={<Recurring />} />
           </Routes>
